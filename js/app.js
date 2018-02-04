@@ -1,5 +1,8 @@
 window.addEventListener('load', function() {
 
+  // Keep track of whether user logged in
+  var isLoggedIn = false;
+
   // Accessible globally as auth0.webAuth
   var webAuth = new auth0.WebAuth({
     domain: 'any-mammals-milk.auth0.com',
@@ -10,8 +13,8 @@ window.addEventListener('load', function() {
     redirectUri: window.location.href
   });
 
-  var loginBtn = document.getElementById('btn-login'),
-    logoutBtn = document.getElementById('btn-logout');
+  var loginBtn = document.getElementById('btn-login');
+    // logoutBtn = document.getElementById('btn-logout');
 
   // Login when user clicks button
   loginBtn.addEventListener('click', function(e) {
@@ -19,13 +22,13 @@ window.addEventListener('load', function() {
     webAuth.authorize();
   });
 
-  logoutBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('id_token');
-    localStorage.removeItem('expires_at');
-    toggleLoginButton(true);
-  });
+  // logoutBtn.addEventListener('click', function(e) {
+  //   e.preventDefault();
+  //   localStorage.removeItem('access_token');
+  //   localStorage.removeItem('id_token');
+  //   localStorage.removeItem('expires_at');
+  //   updateLoginButton(true);
+  // });
 
   // After login redirects user to page, remove hash and connect to API 
   // to get user data
@@ -35,38 +38,39 @@ window.addEventListener('load', function() {
     webAuth.parseHash(function(err, authResult) {
       if (authResult && authResult.accessToken && authResult.idToken) {
         window.location.hash = '';
-        setSession(authResult);
-        toggleLoginButton(false);
+        // setSession(authResult);
+        isLoggedIn = true;
       } 
       // Show login button
       else {
-        toggleLoginButton(true);
+        isLoggedIn = false;
         if (err) {
           console.log(err);
           alert('Error: ' + err.error + '. Check the console for further details.');
         }
       }
+      updateLoginButton();
     });
   }
 
-  function setSession(authResult) {
-    // Set the time that the access token will expire at
-    var expiresAt = JSON.stringify(
-      authResult.expiresIn * 1000 + new Date().getTime()
-      );
-    localStorage.setItem('access_token', authResult.accessToken);
-    localStorage.setItem('id_token', authResult.idToken);
-    localStorage.setItem('expires_at', expiresAt);
-  }
+  // function setSession(authResult) {
+  //   // Set the time that the access token will expire at
+  //   var expiresAt = JSON.stringify(
+  //     authResult.expiresIn * 1000 + new Date().getTime()
+  //     );
+  //   localStorage.setItem('access_token', authResult.accessToken);
+  //   localStorage.setItem('id_token', authResult.idToken);
+  //   localStorage.setItem('expires_at', expiresAt);
+  // }
 
-  function toggleLoginButton(isLogin) {
-    if ( isLogin ) {
-      loginBtn.classList.remove('d-none');
-      logoutBtn.classList.add('d-none');
+  function updateLoginButton() {
+    if ( isLoggedIn ) {
+      loginBtn.classList.add('d-none');
+      // logoutBtn.classList.remove('d-none');
     }
     else {
-      loginBtn.classList.add('d-none');
-      logoutBtn.classList.remove('d-none');
+      loginBtn.classList.remove('d-none');
+      // logoutBtn.classList.add('d-none');
     }
   }
 
