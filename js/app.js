@@ -16,35 +16,34 @@ window.addEventListener('load', function() {
     webAuth.authorize();
   });
 
-  //--
-  
-  function handleAuthentication() {
-    webAuth.parseHash(function(err, authResult) {
-      if (authResult && authResult.accessToken && authResult.idToken) {
-        window.location.hash = '';
-        setSession(authResult);
-      } else if (err) {
-        console.log(err);
-        alert('Error: ' + err.error + '. Check the console for further details.');
-      }
-      // displayButtons();
-    });
-  }
+}); 
 
-  function setSession(authResult) {
-    // Set the time that the access token will expire at
-    var expiresAt = JSON.stringify(
-      authResult.expiresIn * 1000 + new Date().getTime()
-      );
-    localStorage.setItem('access_token', authResult.accessToken);
-    localStorage.setItem('id_token', authResult.idToken);
-    localStorage.setItem('expires_at', expiresAt);
-  }
+function handleAuthentication() {
+  webAuth.parseHash(function(err, authResult) {
+    if (authResult && authResult.accessToken && authResult.idToken) {
+      window.location.hash = '';
+      setSession(authResult);
+      console.log('user successfully logged in!');
+    } else if (err) {
+      console.log(err);
+      alert('Error: ' + err.error + '. Check the console for further details.');
+    }
+    // displayButtons();
+  });
+}
+
+function setSession(authResult) {
+  // Set the time that the access token will expire at
+  var expiresAt = JSON.stringify(
+    authResult.expiresIn * 1000 + new Date().getTime()
+    );
+  localStorage.setItem('access_token', authResult.accessToken);
+  localStorage.setItem('id_token', authResult.idToken);
+  localStorage.setItem('expires_at', expiresAt);
+}
 
 
   //------------------------
-
-
 
   // // ...
   // var loginStatus = document.querySelector('.container h4');
@@ -119,4 +118,3 @@ window.addEventListener('load', function() {
   //   }
   // }
 
-});
