@@ -10,32 +10,42 @@ window.addEventListener('load', function() {
     redirectUri: window.location.href
   });
 
-  // Login when user clicks button
-  var loginBtn = document.getElementById('btn-login');
+  var loginBtn = document.getElementById('btn-login'),
+    logoutBtn = document.getElementById('btn-logout');
 
+  // Login when user clicks button
   loginBtn.addEventListener('click', function(e) {
     e.preventDefault();
     webAuth.authorize();
+  });
+
+  logoutBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('id_token');
+    localStorage.removeItem('expires_at');
+    toggleLoginButton(true);
   });
 
   // After login redirects user to page, remove hash and connect to API 
   // to get user data
   handleAuthentication();
 
-  // for debugging
-  window.handleAuthentication = handleAuthentication;
-
   function handleAuthentication() {
     webAuth.parseHash(function(err, authResult) {
       if (authResult && authResult.accessToken && authResult.idToken) {
         window.location.hash = '';
         setSession(authResult);
-        console.log('user successfully logged in!');
-      } else if (err) {
-        console.log(err);
-        alert('Error: ' + err.error + '. Check the console for further details.');
+        toggleLoginButton(false);
+      } 
+      // Show login button
+      else {
+        toggleLoginButton(true);
+        if (err) {
+          console.log(err);
+          alert('Error: ' + err.error + '. Check the console for further details.');
+        }
       }
-      // displayButtons();
     });
   }
 
@@ -49,9 +59,18 @@ window.addEventListener('load', function() {
     localStorage.setItem('expires_at', expiresAt);
   }
 
+  function toggleLoginButton(isLogin) {
+    if ( isLogin ) {
+      loginBtn.classList.remove('d-none');
+      logoutBtn.classList.add('d-none');
+    }
+    else {
+      loginBtn.classList.add('d-none');
+      logoutBtn.classList.remove('d-none');
+    }
+  }
+
 }); 
-
-
 
 
   //------------------------
