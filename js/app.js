@@ -38,6 +38,9 @@ window.addEventListener('load', function() {
     webAuth.parseHash(function(err, authResult) {
       if (authResult && authResult.accessToken && authResult.idToken) {
         window.location.hash = '';
+
+        window.userId = authResult.idTokenPayload.sub;
+
         // setSession(authResult);
         isLoggedIn = true;
       } 
