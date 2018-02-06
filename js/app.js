@@ -1,3 +1,79 @@
+const images = [
+  '/images/mammal-1.jpg',
+  '/images/mammal-2.jpg',
+  '/images/mammal-3.jpg',
+  '/images/mammal-4.jpg',
+  '/images/mammal-5.jpg',
+];
+
+const imageElem = document.getElementById('mammal-image');
+imageElem.src = images[0];
+
+let mammalIndex = 0;
+
+const yesBtn = document.getElementById('btn-yes'),
+  noBtn = document.getElementById('btn-no');
+
+yesBtn.addEventListener('click', () => answerQuestion(true));
+noBtn.addEventListener('click', () => answerQuestion(false));
+
+function answerQuestion(isYes) {
+  yesBtn.disabled = noBtn.disabled = true;
+
+  // fake id
+  const mammalId = mammalIndex + 1;
+
+  recordVote(mammalId, isYes, data => {
+    
+    if ( data.success ) {
+      console.log('Recorded vote', mammalId, isYes);
+    }
+    else {
+      console.error('Failed to record vote', mammalId, isYes, data);
+    }
+
+    mammalIndex = mammalIndex + 1 === images.length ? 0 : mammalIndex + 1;
+    imageElem.src = images[mammalIndex];
+
+    yesBtn.disabled = noBtn.disabled = false;
+
+  });
+}
+
+function recordVote(mammalId, isYes, callback) {
+  const url = 'http://api.micahjon.com/any-mammals-milk/vote.php',
+    data = '?data=' + JSON.stringify({ 
+      userId: window.userId,
+      votes: [{ mammalId: mammalId, vote: isYes ? 1 : -1 }]
+    });
+
+  getJSON(url + data, callback);
+}
+
+function getJSON(url, callback) {
+  var request = new XMLHttpRequest();
+  request.open('GET', url, true);
+
+  request.onload = function() {
+    if (this.status >= 200 && this.status < 400) {
+      // Success!
+      var data = JSON.parse(this.response);
+      callback(data);
+
+    } else {
+      // We reached our target server, but it returned an error
+    }
+  };
+
+  request.onerror = function() {
+    // There was a connection error of some sort
+  };
+
+  request.send();
+}
+
+//--
+
 window.addEventListener('load', function() {
 
   // Keep track of whether user logged in
@@ -19,7 +95,16 @@ window.addEventListener('load', function() {
   // Login when user clicks button
   loginBtn.addEventListener('click', function(e) {
     e.preventDefault();
+
+    if ( window.location.host.startsWith('localhost') ) {
+      isLoggedIn = true;
+      window.userId = 'test-user|' + Math.round(Math.random() * 1000000);
+      updateLoginButton();
+      return;
+    }
+    
     webAuth.authorize();
+
   });
 
   // logoutBtn.addEventListener('click', function(e) {
@@ -70,10 +155,14 @@ window.addEventListener('load', function() {
     if ( isLoggedIn ) {
       loginBtn.classList.add('d-none');
       // logoutBtn.classList.remove('d-none');
+      yesBtn.classList.remove('d-none');
+      noBtn.classList.remove('d-none');
     }
     else {
       loginBtn.classList.remove('d-none');
       // logoutBtn.classList.add('d-none');
+      yesBtn.classList.add('d-none');
+      noBtn.classList.add('d-none');
     }
   }
 

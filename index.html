@@ -14,42 +14,31 @@
     <![endif]-->
 
     <div class="content">
-      <!-- <nav class="navbar navbar-default">
-        <div class="container-fluid">
-          <div class="navbar-header">
-            <a class="navbar-brand" href="#">Mmmmmm.. get that milk</a>
-
-            <button id="btn-home-view" class="btn btn-primary btn-margin">
-                Home
-            </button>
-
-            <button id="btn-login" class="btn btn-primary btn-margin">
-                Log In
-            </button>
-
-            <button id="btn-logout" class="btn btn-primary btn-margin">
-                Log Out
-            </button>
-
-          </div>
-        </div>
-      </nav> -->
 
       <main class="container">
         <!-- home view -->
-        <div id="home-view">
+        <div id="home-view" style="width: 510px; margin: 1em auto;">
           
         	<h1>Any Mammal's Milk</h1>
-			<p>(Yes, this is a real thing)</p>
+			<p>(Yes, this is exactly what it sounds like)</p>
 
-			<button id="btn-login" class="btn btn-primary btn-sm d-none">Login to vote on mammals!</button>
+			<h2 style="margin-top: 1em">Would you drink this mammals milk?!</h2>
 
-			<button id="btn-logout" class="btn btn-secondary btn-sm d-none">Logout</button>
+			<img id="mammal-image" style="max-width: 100%; margin: .5em auto 1em;"></img>
+
+			<div style="display: flex; justify-content: space-between;">
+				<button id="btn-login" class="btn btn-primary btn-sm d-none">Login to vote on mammals!</button>
+				<button id="btn-no" class="btn btn-danger d-none">Ewww!</button>
+				<button id="btn-yes" class="btn btn-success d-none">Yasss!</button>
+			</div>
+			
 
         </div>
 
       </main>
     </div>
+
+    <!-- <button id="btn-logout" class="btn btn-secondary btn-sm d-none">Logout</button> -->
 
 	<script type="text/javascript" src="js/app.js"></script>
 
