@@ -24,6 +24,7 @@ def soup_check(page, thearray):
 		headers.append(item.text)
 
 	fatherlist=[]
+	fatherlist.append(page)
 	for row in newsoup.find_all('tr'):
 		sonlist = []
 		for cell in row('td'):
@@ -35,11 +36,6 @@ def soup_check(page, thearray):
 		sonlist = dict(zip(headers,sonlist))
 		fatherlist.append(sonlist)
 
-#	fatherlist=dict(fatherlist)
-#	for baby in fatherlist:
-#		print(baby)
-#		print('OH YEAH OY HEYAHHOEA ')
-#		baby.pop('Trend', None)
 
 	pp=pprint.PrettyPrinter(indent=4)
 	pp.pprint(fatherlist)
