@@ -10,6 +10,7 @@
     "build": "brunch build --production"
   },
   "dependencies": {
+    "lscache": "^1.1.0",
     "roadtrip": "^0.5.1",
     "swing": "^3.1.1"
   },

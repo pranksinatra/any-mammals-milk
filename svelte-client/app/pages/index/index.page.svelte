@@ -158,6 +158,7 @@ import roadtrip from 'roadtrip';
 import Nav from '../../components/Nav';
 import Footer from '../../components/Footer';
 import * as swing from 'swing';
+import lscache from 'lscache';
 
 const mammalSwipeEvent = 'mammalSwipe';
 const loadedImages = [];
@@ -198,10 +199,10 @@ export default {
 		login() {
 			// When working locally, skip authentication
 			if ( window.location.host.startsWith('localhost') ) {
-				const testUserId = 'test-user|' + Math.round(Math.random() * 1000000);
-				this.set({ 
-					user: { id: testUserId } 
-				});
+				const user = { id: 'test-user|' + Math.round(Math.random() * 1000000) };
+				this.set({ user });
+				// Cache test user for 1 day
+				lscache.set('user', user, 60 * 24);
 				return;
 			}
 			// Take user to external login page, then redirect back here on 
@@ -240,7 +241,7 @@ export default {
 	}
 }
 
-// //--
+//--
 
 /**
  * Setup swipable card stack
@@ -342,7 +343,7 @@ function getMammals() {
 		return;
 	}
 
-	fetch('/full.json')
+	fetch('/full.min.json')
 		.then(r => r.json())
 		.then(mammals => {
 			
@@ -381,6 +382,16 @@ function getMammals() {
 
 function handleAuth() {
 
+	// Don't force re-authentication if user has already been logged in
+	// in a prior session on this computer
+	const cachedUser = lscache.get('user');
+	if ( cachedUser && cachedUser.id ) {
+		this.set({
+			user: cachedUser
+		});
+	}
+
+
 	window.onAuthReady.then(() => {
 
 		this.webAuth = new auth0.WebAuth({
@@ -396,9 +407,10 @@ function handleAuth() {
 		this.webAuth.parseHash((err, authResult) => {
 			if ( authResult && authResult.accessToken && authResult.idToken ) {
 				window.location.hash = '';
-				this.set({
-					user: { id: authResult.idTokenPayload.sub }
-				});
+				const user = { id: authResult.idTokenPayload.sub };
+				this.set({ user });
+				// Cache user data for a week
+				lscache.set('user', user, 60 * 24 * 7);
 				return;
 			} 
 			// Unable to authenticate for some reason

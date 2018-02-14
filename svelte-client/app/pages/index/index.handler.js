@@ -13,7 +13,7 @@ export default class IndexHandler {
             page: 'index'
           }
         })
-        console.log('> Entered index route', this.router);
+        console.log('> Entered index route');
       },
       leave(current, previous) {
         this.component.destroy();
