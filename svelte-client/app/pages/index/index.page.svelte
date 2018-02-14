@@ -248,7 +248,13 @@ export default {
 let windowWidth = window.innerWidth;
 const stack = swing.Stack({
 	allowedDirections: [ swing.Direction.LEFT, swing.Direction.RIGHT ],
-	throwOutDistance: () => Math.max(windowWidth) / 4 + 200
+	throwOutDistance: () => Math.max(windowWidth) / 4 + 200,
+	// Make it easier to swipe left or right on a card
+	throwOutConfidence: (xOffset, yOffset, element) => {
+		const xConfidence = Math.min(Math.abs(xOffset) / (element.offsetWidth / 1.75), 1);
+		const yConfidence = Math.min(Math.abs(yOffset) / element.offsetHeight, 1);
+		return Math.max(xConfidence, yConfidence);
+	}
 });
 
 stack.on('throwoutright', onSwipeRight);
