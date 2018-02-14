@@ -387,7 +387,7 @@ function handleAuth() {
 		});
 
 		// If user is coming from Auth0 authentication redirect, log them in
-		this.webAuth.parseHash(function(err, authResult) {
+		this.webAuth.parseHash((err, authResult) => {
 			if ( authResult && authResult.accessToken && authResult.idToken ) {
 				window.location.hash = '';
 				this.set({

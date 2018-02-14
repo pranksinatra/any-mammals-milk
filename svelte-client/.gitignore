@@ -25,8 +25,8 @@ node_modules/
 # Brunch folder for temporary files.
 tmp/
 
-# Brunch output folder. (use for github pages site)
-# public/
+# Brunch output folder (copy it to /docs folder after building)
+public/
 
 # Bower stuff.
 bower_components/
