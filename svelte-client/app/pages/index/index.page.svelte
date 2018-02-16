@@ -417,7 +417,7 @@ function handleAuth() {
 			clientID: '8kL5tAS66BwF7gphZQURQwwGR720ofy5',
 			responseType: 'token id_token',
 			audience: 'https://any-mammals-milk.auth0.com/userinfo',
-			scope: 'openid',
+			scope: 'openid profile email',
 			redirectUri: window.location.href
 		});
 
