@@ -2,7 +2,7 @@
 
 <main>
 
-	<h1 style="font-family: 'Patrick Hand'">Would you drink this mammals milk?</h1>
+	<h1 style="font-family: 'Patrick Hand'">Would you drink this mammal's milk?</h1>
 
 	<div class="{{squareClass}}" on:mammalSwipe="updateMammmals()">
 		{{#each mammals as mammal @html_id}}
@@ -28,7 +28,13 @@
 	</div>
 
 	{{#if user && user.email }}
-	
+	<div class="newsletter">
+		<h2 class="alt-font">Get notified when your preferred mammals' milk is available!</h2>
+		<form action="#" on:submit="newsletterSignup(event)">
+			<input type="email" name="email" value={{user.email}} disabled>
+			<button type="submit">Sign up</button>
+		</form>
+	</div>
 	{{/if}}
 
 </main>
@@ -161,6 +167,44 @@ h1 {
 	}
 }
 
+/* ------------ */
+
+.newsletter {
+	max-width: 520px;
+	width: 100%;
+	margin: 2rem auto 6rem;
+}
+.newsletter h2 {
+	font-size: 1.5rem;
+	line-height: 1.5;
+	text-align: center;
+}
+@media (min-width: 480px) {
+	.newsletter h2 {
+		font-size: 2rem;
+	}
+}
+.newsletter form {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+.newsletter input[type="email"] {
+	width: 38.1%;
+	min-width: 11rem;
+	max-width: 15rem;
+	line-height: calc( 2rem - 2px );
+	font-size: 14px;
+	padding: 0 .75rem;
+	border: 1px solid #ebebeb;
+	border-radius: 3px 0 0 3px;
+
+}
+.newsletter button {
+	border-radius: 0 3px 3px 0;
+	box-shadow: none;
+}
+
 </style>
 
 <script>
@@ -172,6 +216,9 @@ import lscache from 'lscache';
 
 const mammalSwipeEvent = 'mammalSwipe';
 const loadedImages = [];
+
+const voteQueue = [];
+let voteTimeout = null;
 
 let currentCard = null;
 
@@ -213,9 +260,9 @@ export default {
 					gender: 'male',
 					picture: 'http://anymammalsmilk.com/jared.jpg',
 				};
-				this.set({ user });
-				// Cache test user for 1 day
-				lscache.set('user', user, 60 * 24);
+
+				this.setUser(user);
+				
 				return;
 			}
 			// Take user to external login page, then redirect back here on 
@@ -225,6 +272,26 @@ export default {
 		onClick(vote) {
 			onClick(vote, this.refs.buttonsContainer);
 		},
+		newsletterSignup(event) {
+			event.preventDefault();
+
+			console.log(event);
+
+			// console.log(data);
+		},
+		setUser(user, updateCache = true) {
+			
+			// Update 
+			this.set({ user });
+
+			// Make userId available globally for API requests
+			window.userId = user.id;
+
+			if ( updateCache ) {
+				// Cache user data for a week
+				lscache.set('user', user, 60 * 24 * 7);
+			}
+		}
 	},
 	events: {
 		mammalSwipe(element, callback) {
@@ -318,10 +385,48 @@ function onClick(isYes, buttonsContainer) {
 	}, 300);
 }
 
-// Update mammal object
+
 function handleVote(htmlId, isYes) {
-	window.mammals.find(mammal => mammal.html_id === htmlId).vote = isYes ? 1 : -1;
+
+	const mammal = window.mammals.find(mammal => mammal.html_id === htmlId),
+		vote = isYes ? 1 : -1;
+
+	// Update mammal object
+	mammal.vote = vote;
+
+	// Add vote to queue to save to server
+	voteQueue.push({ mammalId: mammal.id, vote });
+
+	// Send votes to the server every 3 seconds or so
+	clearTimeout(voteTimeout);
+	voteTimeout = setTimeout(recordVotes, 3000);
+
 }
+
+function recordVotes() {
+
+	if ( ! voteQueue.length ) return;
+
+	const url = 'http://api.micahjon.com/any-mammals-milk/vote.php',
+		sentVotes = voteQueue.splice(0),
+		data = '?data=' + JSON.stringify({ 
+			userId: window.userId,
+			votes: sentVotes
+		});
+
+	getJSON(url + data)
+		.then(data => {
+			console.log(`Recorded ${sentVotes.length} votes`, data);
+		})
+		.catch(error => {
+			console.log('Failed to record votes'); 
+			console.error(error);
+
+			// Add unrecorded votes back on to the queue
+			voteQueue.splice(0, 0, ...sentVotes);
+		});
+}
+
 
 function animateCard(cardElem, isYes) {
 
@@ -411,9 +516,8 @@ function handleAuth() {
 	// in a prior session on this computer
 	const cachedUser = lscache.get('user');
 	if ( cachedUser && cachedUser.id ) {
-		this.set({
-			user: cachedUser
-		});
+
+		this.setUser(cachedUser, false);
 	}
 
 	window.onAuthReady.then(() => {
@@ -444,12 +548,8 @@ function handleAuth() {
 					gender: userData.gender,
 					picture: userData.picture,
 				};
-				this.set({ user });
-				
-				// window.authResult = authResult; // (For debugging)
-				
-				// Cache user data for a week
-				lscache.set('user', user, 60 * 24 * 7);
+
+				this.setUser(user);
 
 				return;
 			} 
@@ -495,6 +595,35 @@ function shuffle(array) {
 
 	return array;
 }
+
+function getJSON(url, callback) {
+	
+	return new Promise((resolve, reject) => {
+
+		var request = new XMLHttpRequest();
+		
+		request.onload = function() {
+			if (this.status >= 200 && this.status < 400) {
+				// Success!
+				const data = JSON.parse(this.response);
+				resolve(data);
+			} 
+			else {
+				// We reached our target server, but it returned an error
+				reject(`Server error #${this.status}`);
+			}
+		};
+
+		request.onerror = request.onabort = () => reject('Request failed');
+
+		request.open('GET', url, true);
+		request.send();
+
+	});
+}
+
+
+window.onbeforeunload = recordVotes;
 
 window.addEventListener("resize", debounce(calculateDimensions, 100), false);
 function calculateDimensions() {
