@@ -2,7 +2,7 @@
 
 <main>
 
-	<h1>Would <u>you</u> drink this mammals milk?</h1>
+	<h1 style="font-family: 'Patrick Hand'">Would you drink this mammals milk?</h1>
 
 	<div class="{{squareClass}}" on:mammalSwipe="updateMammmals()">
 		{{#each mammals as mammal @html_id}}
@@ -16,16 +16,20 @@
 		</div>
 		{{/each}}
 
-		<div id="buttons" class="buttons">
+		<div id="buttons" class="buttons" ref:buttonsContainer>
 			{{#if user }}
-			<button class="button--yes" on:click="onClick(true)">Yup!</button>
-			<button class="button--no" on:click="onClick(false)">Ewww!</button>
+			<button class="button--yes alt-font" on:click="onClick(true)">Yes</button>
+			<button class="button--no alt-font" on:click="onClick(false)">No</button>
 			{{else}}
 			<button class="button--login" on:click="login()">Log in to vote on mammals!</button>
 			{{/if}}
 		</div>
 
 	</div>
+
+	{{#if user && user.email }}
+	
+	{{/if}}
 
 </main>
 
@@ -122,8 +126,11 @@ h1 {
 }
 
 .button--no {
+	font-size: 1.25rem;
 	left: 1rem;
-	width: 4.75em;
+	height: 3em;
+	width: 3em;
+	border-radius: 50%;
 	background-color: rgb(220, 53, 69);
 }
 .button--no:hover {
@@ -134,8 +141,11 @@ h1 {
 }
 
 .button--yes {
+	font-size: 1.25rem;
 	right: 1rem;
-	width: 4.75em;
+	height: 3em;
+	width: 3em;
+	border-radius: 50%;
 	background-color: rgb(40, 167, 69);
 }
 .button--yes:hover {
@@ -164,10 +174,6 @@ const mammalSwipeEvent = 'mammalSwipe';
 const loadedImages = [];
 
 let currentCard = null;
-let buttonsContainer = null;
-setTimeout(() => {
-	buttonsContainer = document.getElementById('buttons');
-}, 0);
 
 export default {
 	components: {
@@ -209,7 +215,9 @@ export default {
 			// successful login
 			window.onAuthReady.then(() => this.webAuth.authorize());
 		},
-		onClick,
+		onClick(vote) {
+			onClick(vote, this.refs.buttonsContainer);
+		},
 	},
 	events: {
 		mammalSwipe(element, callback) {
@@ -250,10 +258,20 @@ let windowWidth = window.innerWidth;
 const stack = swing.Stack({
 	allowedDirections: [ swing.Direction.LEFT, swing.Direction.RIGHT ],
 	throwOutDistance: () => Math.max(windowWidth) / 4 + 200,
+	
 	// Make it easier to swipe left or right on a card
 	throwOutConfidence: (xOffset, yOffset, element) => {
-		const xConfidence = Math.min(Math.abs(xOffset) / (element.offsetWidth / 1.75), 1);
-		const yConfidence = Math.min(Math.abs(yOffset) / element.offsetHeight, 1);
+
+		const cardWidth = element.offsetWidth,
+			cardHeight = element.offsetHeight;
+
+		// Card's container side length.
+		// Average it with card width to make cards behave more similarly regardless of width
+		const squareWidth = Math.max(cardHeight, cardWidth);
+
+		const xConfidence = Math.min(Math.abs(xOffset) / ((cardWidth + squareWidth) / 3.6), 1);
+		const yConfidence = Math.min(Math.abs(yOffset) / cardHeight, 1);
+
 		return Math.max(xConfidence, yConfidence);
 	}
 });
@@ -280,7 +298,7 @@ function onSwipeLeft() {
 	removeCard(currentCard);
 }
 
-function onClick(isYes) {
+function onClick(isYes, buttonsContainer) {
 	handleVote(currentCard.id, isYes);
 	animateCard(currentCard, isYes);
 	
@@ -408,6 +426,7 @@ function handleAuth() {
 			if ( authResult && authResult.accessToken && authResult.idToken ) {
 				window.location.hash = '';
 				const user = { id: authResult.idTokenPayload.sub };
+				window.authResult = authResult;
 				this.set({ user });
 				// Cache user data for a week
 				lscache.set('user', user, 60 * 24 * 7);

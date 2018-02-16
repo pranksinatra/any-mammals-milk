@@ -1,9 +1,14 @@
 body {
   margin: 0;
-  font-family: 'Open Sans', Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-family: Lato, Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
   font-size: 16px;
   line-height: 1.5;
   color: #333;
+}
+
+main > h1, .alt-font {
+  font-family: 'Patrick Hand', Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-weight: 300 !important;
 }
 
 main, .footer {
@@ -19,7 +24,6 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 main > h1 {
-  font-family: 'Give You Glory', sans-serif;
   text-align: center;
   margin: 0 auto;
   font-size: 2rem;
