@@ -205,7 +205,14 @@ export default {
 		login() {
 			// When working locally, skip authentication
 			if ( window.location.host.startsWith('localhost') ) {
-				const user = { id: 'test-user|' + Math.round(Math.random() * 1000000) };
+				const user = { 
+					id: 'test-user|' + Math.round(Math.random() * 1000000),
+					email: 'jaredmoneymiller@gmail.com',
+					lastName: 'Miller',
+					firstName: 'Jared',
+					gender: 'male',
+					picture: 'http://anymammalsmilk.com/jared.jpg',
+				};
 				this.set({ user });
 				// Cache test user for 1 day
 				lscache.set('user', user, 60 * 24);
@@ -409,7 +416,6 @@ function handleAuth() {
 		});
 	}
 
-
 	window.onAuthReady.then(() => {
 
 		this.webAuth = new auth0.WebAuth({
@@ -423,13 +429,28 @@ function handleAuth() {
 
 		// If user is coming from Auth0 authentication redirect, log them in
 		this.webAuth.parseHash((err, authResult) => {
-			if ( authResult && authResult.accessToken && authResult.idToken ) {
+			if ( authResult && authResult.accessToken && authResult.idTokenPayload ) {
+
+				// Remove hash in URL 
 				window.location.hash = '';
-				const user = { id: authResult.idTokenPayload.sub };
-				window.authResult = authResult;
+				
+				// Update UI w/ user data
+				const userData = authResult.idTokenPayload;
+				const user = { 
+					id: userData.sub,
+					email: userData.email,
+					lastName: userData.family_name,
+					firstName: userData.given_name,
+					gender: userData.gender,
+					picture: userData.picture,
+				};
 				this.set({ user });
+				
+				// window.authResult = authResult; // (For debugging)
+				
 				// Cache user data for a week
 				lscache.set('user', user, 60 * 24 * 7);
+
 				return;
 			} 
 			// Unable to authenticate for some reason

@@ -7,7 +7,7 @@ import Routes from './routes';
 document.addEventListener('DOMContentLoaded', main);
 
 function main () {
-  console.log('v0.0.1');
+  console.log('v0.0.2');
 
   window.Routes = new Routes();
   
