@@ -16,7 +16,5 @@
     "url": "https://github.com/pranksinatra/any-mammals-milk/issues"
   },
   "homepage": "https://github.com/pranksinatra/any-mammals-milk#readme",
-  "dependencies": {
-    "auth0-js": "^9.2.0"
-  }
+  "dependencies": {}
 }
