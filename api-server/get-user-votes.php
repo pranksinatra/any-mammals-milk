@@ -63,10 +63,7 @@ $stmt->bind_result($mammalId, $vote);
 $votes = [];
 
 while ($stmt->fetch()) {
-    $votes[] = [ 
-    	'mammal_id' => $mammalId, 
-    	'vote' => $vote 
-    ];
+    $votes[$mammalId] = $vote;
 }
 
 $stmt->close();
