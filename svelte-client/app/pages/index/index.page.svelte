@@ -37,12 +37,10 @@ export default {
 		Footer,
 	},
 	oncreate() {
-
-		if ( window.mammals ) {
+		if (window.mammals) {
 			this.set({ mammals: window.mammals });
 			this.updateMammmals();
-		}
-		else {
+		} else {
 			api
 				.getMammals()
 				.then(mammals => {
@@ -62,15 +60,37 @@ export default {
 
 		//--
 
+		const updateUser = user => {
+			this.set({ user });
+
+			api
+				.getUserVotes(user.id)
+				.then(votes => {
+
+					const voteCount = Object.keys(votes).length;
+					console.log(`Got ${voteCount} votes`);
+
+					if (!voteCount) return;
+
+					this.get('mammals').forEach(mammal => {
+						if (votes.hasOwnProperty(mammal.id)) {
+							mammal.vote = votes[mammal.id];
+						}
+					});
+
+					this.updateMammmals();
+				})
+				.catch(err => {
+					console.error(err);
+				});
+		};
+
 		auth
 			.getUser()
-			.then(user => this.set({ user }))
+			.then(updateUser)
 			.catch(err => console.log(err));
 
-		auth.addUpdateListener(user => {
-			this.set({ user });
-		});
-
+		auth.addUpdateListener(updateUser);
 	},
 	// Setup initial data for app
 	data() {
@@ -88,9 +108,9 @@ export default {
 			const mammal = this.get('mammalsToSwipe')[0];
 			mammal.vote = vote;
 			api.recordVote({
-				userId: this.get('user').id, 
+				userId: this.get('user').id,
 				mammalId: mammal.id,
-				vote
+				vote,
 			});
 			this.updateMammmals();
 		},

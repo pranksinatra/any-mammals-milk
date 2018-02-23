@@ -31,6 +31,18 @@ class API {
 		);
 	}
 
+	getUserVotes(userId) {
+		const url = `${this.baseURL}/get-user-votes.php/?data=${JSON.stringify({ userId })}`;
+
+		return fetch(url)
+			.then(r => r.json())
+			.then(({ votes, error }) => {
+				if (!votes) throw error;
+				return votes;
+			});
+
+	}
+
 	recordVote({ userId, mammalId, vote }) {
 		// User id has changed.
 		if (userId !== this.userId) {
@@ -89,8 +101,6 @@ class API {
 				if (!success) throw error;
 			});
 	}
-
-	// getUserVotes
 
 	// saveUserVotes
 
