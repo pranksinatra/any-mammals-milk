@@ -93,7 +93,7 @@ class API {
 	}
 
 	saveUserData(user) {
-		const url = `${this.baseURL}/add-user.php/?data=${JSON.stringify(user)}`;
+		const url = `${this.baseURL}/add-user.php/?data=${encodeURIComponent(JSON.stringify(user))}`;
 
 		return fetch(url)
 			.then(r => r.json())
