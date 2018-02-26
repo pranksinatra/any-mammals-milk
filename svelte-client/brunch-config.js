@@ -8,15 +8,17 @@ module.exports = {
   },
   plugins: {
     babel: { presets: ['env'] },
-    closurecompiler: {
-      compilationLevel: 'SIMPLE',
-      createSourceMap: true
-    },
-    postcss: { processors: [require('autoprefixer')] }
+    postcss: { processors: [
+      require('postcss-import'),
+      require('autoprefixer')
+      ] }
   },
   modules: {
     autoRequire: {
       'app.js': ['initialize']
     }
+  },
+  npm: {
+    styles: { chartist: ['dist/chartist.css'] }
   }
 };

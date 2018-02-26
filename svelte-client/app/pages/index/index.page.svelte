@@ -6,16 +6,6 @@
 
 	<Swipe mammals={{mammalsToSwipe}} votingEnabled={{ !! user }} on:vote="onVote(event.vote)" on:login="login()"></Swipe>
 
-	{{#if user && user.email }}
-	<div class="newsletter">
-		<h2 class="alt-font">Get notified when your preferred mammals' milk is available!</h2>
-		<form action="#" on:submit="newsletterSignup(event)">
-			<input type="email" name="email" value={{user.email}} disabled>
-			<button type="submit">Sign up</button>
-		</form>
-	</div>
-	{{/if}}
-
 </main>
 
 <Footer></Footer>
@@ -29,6 +19,7 @@ import lscache from 'lscache';
 import { auth } from '../../lib/auth';
 import { api } from '../../lib/api';
 import { utils } from '../../lib/utils';
+import { mammals } from '../../lib/mammals';
 
 export default {
 	components: {
@@ -36,32 +27,70 @@ export default {
 		Swipe,
 		Footer,
 	},
+	// Setup initial data for app
+	data() {
+		return {
+			mammals: [],
+			mammalsToSwipe: [],
+			user: null,
+		};
+	},
+	// Get list of mammals and current user data
 	oncreate() {
-		if (window.mammals) {
-			this.set({ mammals: window.mammals });
+
+		mammals
+			.getMammals()
+			.then(mammals => {
+				this.set({ mammals });
+				this.updateMammmals();
+			})
+			.catch(err => {
+				console.log('Unable to fetch mammals:');
+				console.error(err);
+			});
+
+		// //--
+
+		this.updateUser = this.updateUser.bind(this);
+
+		auth
+			.getUser()
+			.then(this.updateUser)
+			.catch(err => console.log(err));
+
+		auth.addUpdateListener(this.updateUser);
+	},
+
+	ondestroy() {
+		auth.removeUpdateListener(this.updateUser);
+	},
+	
+	methods: {
+		goto(path) {
+			roadtrip.goto(path);
+		},
+		onVote(vote) {
+			const mammal = this.get('mammalsToSwipe')[0];
+			mammal.vote = vote;
+			api.recordVote({
+				userId: this.get('user').id,
+				mammalId: mammal.id,
+				vote,
+			});
 			this.updateMammmals();
-		} else {
-			api
-				.getMammals()
-				.then(mammals => {
-					mammals = utils.shuffle(mammals);
-					this.set({ mammals });
-
-					// For debugging
-					console.log(`Fetched ${mammals.length} mammals`);
-					window.mammals = mammals;
-
-					this.updateMammmals();
-				})
-				.catch(err => {
-					console.error(err);
-				});
-		}
-
-		//--
-
-		const updateUser = user => {
+		},
+		updateMammmals() {
+			this.set({
+				mammalsToSwipe: this.get('mammals')
+					.filter(mammal => !mammal.hasOwnProperty('vote'))
+					.slice(0, 2),
+			});
+		},
+		updateUser(user) {
 			this.set({ user });
+			
+			if ( window.userId === user.id ) return;
+			window.userId = user.id;
 
 			api
 				.getUserVotes(user.id)
@@ -83,43 +112,6 @@ export default {
 				.catch(err => {
 					console.error(err);
 				});
-		};
-
-		auth
-			.getUser()
-			.then(updateUser)
-			.catch(err => console.log(err));
-
-		auth.addUpdateListener(updateUser);
-	},
-	// Setup initial data for app
-	data() {
-		return {
-			mammals: [],
-			mammalsToSwipe: [],
-			user: null,
-		};
-	},
-	methods: {
-		goto(path) {
-			roadtrip.goto(path);
-		},
-		onVote(vote) {
-			const mammal = this.get('mammalsToSwipe')[0];
-			mammal.vote = vote;
-			api.recordVote({
-				userId: this.get('user').id,
-				mammalId: mammal.id,
-				vote,
-			});
-			this.updateMammmals();
-		},
-		updateMammmals() {
-			this.set({
-				mammalsToSwipe: this.get('mammals')
-					.filter(mammal => !mammal.hasOwnProperty('vote'))
-					.slice(0, 2),
-			});
 		},
 		login() {
 			auth.login();

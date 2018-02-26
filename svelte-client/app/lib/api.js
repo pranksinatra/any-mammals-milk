@@ -31,6 +31,17 @@ class API {
 		);
 	}
 
+	getVotesByMammal() {
+		const url = `${this.baseURL}/get-mammal-votes.php`;
+
+		return fetch(url)
+			.then(r => r.json())
+			.then(({ votes }) => {
+				if (!votes) throw 'Unable to get votes by mammal';
+				return votes;
+			});
+	}
+
 	getUserVotes(userId) {
 		const url = `${this.baseURL}/get-user-votes.php/?data=${JSON.stringify({ userId })}`;
 

@@ -48,6 +48,16 @@ class Auth {
 
 	}
 
+	removeUpdateListener(listener) {
+		
+		const index = this.userUpdateListeners.indexOf(listener);
+
+		if ( index !== -1 ) {
+			this.userUpdateListeners.splice( index, 1 );
+		}
+
+	}
+
 	notifyListeners() {
 
 		this.userUpdateListeners.forEach(listener => listener && listener(this.user));
