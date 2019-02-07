@@ -1,6 +1,11 @@
 import React from 'react';
 import styled from '@emotion/styled';
-import Swing from 'react-swing';
+import { titleFont } from './lib/fonts';
+
+// Aspect ratio of the box that contains the mammal figure (image)
+// and the caption below it. The figure is perfectly centered in
+// this 10x8 box.
+const containerAspectRatio = 10 / 8;
 
 const ContainerBox = styled('div')`
   position: relative;
@@ -11,7 +16,7 @@ const ContainerBox = styled('div')`
   :before {
     content: '';
     display: block;
-    padding-bottom: 80%; /* 10x8, so not perfectly square */
+    padding-bottom: ${100 / containerAspectRatio}%;
   }
 `;
 
@@ -30,30 +35,31 @@ const CenterContents = styled('div')`
     z-index: 1;
     filter: drop-shadow(0 0 1rem rgba(0, 0, 0, 0.25));
   }
-  .blur {
-    filter: blur(5px);
-  }
+`;
 
-  .image {
-    /* max-width set programmatically */
-    position: relative;
-    flex-grow: 1;
-    background-size: contain;
-  }
+const Mammal = styled('figure')`
+  /* max-width set programmatically */
+  position: relative;
+  flex-grow: 1;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-color: #e7e7e7;
+`;
 
-  .caption {
-    position: absolute;
-    width: 100%;
-    text-align: center;
-    background-color: #f5f5f5;
-    padding: 0.5rem 0;
-  }
+const Caption = styled('figcaption')`
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  background-color: #f5f5f5;
+  padding: 0.5rem 0;
+  margin: 0;
 `;
 
 const CircleButton = styled('button')`
   position: absolute;
-  top: 50%;
-  z-index: 2;
+  top: calc(50% - 1.5rem + 20px);
+  z-index: 4;
+  font-family: ${titleFont};
 
   font-size: 16px;
   height: 3em;
@@ -88,20 +94,19 @@ const NoButton = styled(CircleButton)`
 `;
 
 // Helpers
-const getMammalBoxId = ({ id }) =>
-  id
-    .replace(' ', '-')
-    .toLowerCase()
-    .replace(/[^a-z-]/g, '');
-
 const getMammalBoxMaxWidth = ({ width, height }) => {
-  const aspectRatio = width / height,
-    boxRatio = 10 / 8;
+  const imageAspectRatio = width / height;
 
-  return 100 * (aspectRatio > boxRatio ? 1 : width / height / boxRatio) + '%';
+  return imageAspectRatio > containerAspectRatio
+    ? '100%'
+    : `${(100 * imageAspectRatio) / containerAspectRatio}%`;
 };
 
-const swingConfig = {
+/**
+ * Generate configuration for Swing library
+ * @param {Object} Swing instance
+ */
+const getSwingConfig = Swing => ({
   allowedDirections: [Swing.DIRECTION.LEFT, Swing.DIRECTION.RIGHT],
   throwOutDistance: () => Math.max(window.windowWidth) / 4 + 200,
 
@@ -122,91 +127,181 @@ const swingConfig = {
 
     return Math.max(xConfidence, yConfidence);
   },
-};
+});
+
+/**
+ * Animate a card to the right or left when user clicks Yes or No
+ */
+function animateCard(cardElem, isRight, callback) {
+  const sign = isRight ? 1 : -1;
+  const duration = 0.3;
+
+  Object.assign(cardElem.style, {
+    transition: `all ${duration}s ease-out`,
+    opacity: '0',
+    transformOrigin: 'transform-origin: 50% 90%',
+    transform: `rotate(40deg) translateY(${-800 * sign}px) translateX(${200 *
+      sign}px)`,
+  });
+
+  setTimeout(() => {
+    requestAnimationFrame(callback);
+  }, duration * 1000);
+}
 
 class Swipe extends React.Component {
+  swingComponent = React.createRef();
+
   constructor(props) {
     super(props);
     this.state = {
-      mounted: false,
+      hasMounted: false,
     };
+    this.getTopCardElement = this.getTopCardElement.bind(this);
+    this.onClickButton = this.onClickButton.bind(this);
+    this.onSwipe = this.onSwipe.bind(this);
+    this.cardStack = null;
+    this.amount = 3;
+    this.topMammal = undefined;
+    this.isAnimating = false;
   }
 
   // Only render if we're not using SSR
   componentDidMount() {
+    this.Swing = require('react-swing').default;
     this.setState({
-      mounted: true,
+      hasMounted: true,
     });
   }
 
+  getTopCardElement() {
+    const cards =
+      (this.swingComponent.current &&
+        this.swingComponent.current.childElements) ||
+      [];
+    const topCard = cards.length ? cards[cards.length - 1].current : undefined;
+
+    // console.trace('got top card', topCard.firstElementChild.id);
+
+    // if (topCard) {
+
+    // } else {
+    //   console.log('no top card!!!', cards[cards.length - 1], cards);
+    // }
+
+    return topCard;
+  }
+
+  teardownCard(cardElement) {
+    if (cardElement) this.cardStack.getCard(cardElement).destroy();
+  }
+
+  onClickButton(isYes) {
+    // Ignore clicks while animation is underway
+    if (this.isAnimating) return;
+
+    const vote = () => this.props.onVote(this.topMammal, isYes);
+    const topCard = this.getTopCardElement();
+
+    // Animate card
+    if (topCard) {
+      // console.log('animating top card', topCard.id);
+
+      this.teardownCard(topCard);
+      this.isAnimating = true;
+      animateCard(topCard, isYes, () => {
+        this.isAnimating = false;
+        vote();
+      });
+    } else {
+      vote();
+    }
+  }
+
+  onSwipe(isRight) {
+    // console.log('swipe', this.topMammal.id, isRight);
+
+    // Remove event listeners from topmost card
+    this.teardownCard(this.getTopCardElement());
+
+    // setTimeout(() => {
+    //   const topCard = this.getTopCardElement();
+    //   console.log('100', topCard ? topCard.firstElementChild.id : topCard);
+    // }, 100);
+
+    this.props.onVote(this.topMammal, isRight);
+  }
+
   render() {
-    const testProps = {
-      mammals: [
-        {
-          id: 'Pseudoryx nghetinhensis',
-          name: 'Saola',
-          image: '/mammals/640px-Pseudoryx_nghetinhensis.PNG',
-          notes:
-            'No individuals in captivity. Wild population highly dispersed, and subpopulations fragmented with numbers of mature individuals below the minimum viable population. Foremost threatened by hunting.',
-          population: '< 750',
-          status: 'CR',
-          trend: 'decrease',
-          width: 640,
-          height: 449,
-        },
-        {
-          id: 'Porcula salvania',
-          name: 'Pygmy hog',
-          image: '/mammals/640px-PorculaSalvaniaAdultWolf.jpg',
-          notes: 'Maximum estimate for mature individuals.',
-          population: '250',
-          status: 'CR',
-          trend: 'decrease',
-          width: 640,
-          height: 458,
-        },
-      ],
-    };
+    // const amount = this.state.amount
+    // console.log(amount);
+    // if (this.amount === 3) {
+    //   this.amount = 4;
+    // } else {
+    //   this.amount = 3;
+    // }
 
-    const mammals = testProps.mammals;
+    // console.log('render', this.amount);
 
-    if (mammals && this.state.mounted) {
+    const mammals = this.props.mammals
+      .filter(({ vote }) => typeof vote !== 'number')
+      .slice(0, this.amount)
+      .reverse();
+
+    if (mammals.length && this.state.hasMounted) {
+      const Swing = this.Swing;
+      const topMammal = mammals[mammals.length - 1];
+      this.topMammal = topMammal;
+      // console.log(
+      //   '---------- render mammals',
+      //   mammals.map(({ htmlId }) => htmlId)
+      // );
+
+      const disableWhenAnimating = {
+        pointerEvents: this.isAnimating ? 'none' : '',
+      };
+
+      // console.log('rendered top mammal', topMammal);
       return (
-        <ContainerBox>
+        <ContainerBox style={disableWhenAnimating}>
           <Swing
-            config={swingConfig}
-            setStack={stack => console.log('updated stack', stack)}
+            config={getSwingConfig(Swing)}
+            setStack={stack => (this.cardStack = stack)}
+            throwoutright={() => this.onSwipe(true)}
+            throwoutleft={() => this.onSwipe(false)}
+            ref={this.swingComponent}
           >
             {mammals.map((mammal, index) => {
-              const id = getMammalBoxId(mammal);
               const maxWidth = getMammalBoxMaxWidth(mammal);
               const paddingBottom = (100 / mammal.width) * mammal.height + '%';
 
               return (
                 <CenterContents
-                  className={index === mammals.length - 1 ? 'topmost' : ''}
+                  key={mammal.id}
+                  id={mammal.htmlId}
+                  style={{ zIndex: index + 1 }}
                 >
-                  <div
-                    key={id}
-                    id={id}
-                    className={index === 0 ? 'image blur' : 'image'}
+                  <Mammal
                     style={{
-                      backgroundImage: `url(${mammal.image})`,
+                      backgroundImage: `url(${mammal.imageSrc})`,
                       maxWidth,
+                      filter: mammal === topMammal ? '' : 'blur(5px)',
                     }}
                   >
                     <div style={{ paddingBottom }} />
-                    <div className="caption">{mammal.name}</div>
-                  </div>
+                    <Caption>{mammal.htmlId}</Caption>
+                  </Mammal>
                 </CenterContents>
               );
             })}
           </Swing>
-          <YesButton className={'title-font'}>Yes</YesButton>
-          <NoButton className={'title-font'}>No</NoButton>
+          <YesButton onClick={() => this.onClickButton(true)}>Yes</YesButton>
+          <NoButton onClick={() => this.onClickButton(false)}>No</NoButton>
         </ContainerBox>
       );
     }
+
+    console.log('--------- render laoding...');
 
     // Loading message
     return (

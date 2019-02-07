@@ -17,6 +17,6 @@
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
     "react-router-dom": "^4.3.1",
-    "react-swing": "^2.0.0"
+    "react-swing": "file:../../react-swing"
   }
 }
