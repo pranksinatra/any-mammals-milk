@@ -30,11 +30,17 @@ class Home extends React.Component {
       });
   }
 
-  handleVote(mammal, vote) {
-    console.log('Voted for mammal', mammal.htmlId, vote);
+  handleVote(mammal, wouldDrink) {
+    console.log('Voted for mammal', mammal.htmlId, wouldDrink);
     this.setState({
       mammals: this.state.mammals.map(thisMammal => {
-        if (thisMammal === mammal) thisMammal.vote = vote ? 1 : -1;
+        if (thisMammal === mammal) {
+          thisMammal.vote = {
+            wouldDrink: !!wouldDrink,
+            voteDate: Date.now(),
+            mammalId: mammal.htmlId,
+          };
+        }
         return thisMammal;
       }),
     });
@@ -44,8 +50,13 @@ class Home extends React.Component {
     let yesVotes = 0;
     let noVotes = 0;
     this.state.mammals.forEach(({ vote }) => {
-      if (vote === 1) return (yesVotes += 1);
-      if (vote === -1) return (noVotes += 1);
+      if (vote) {
+        if (vote.wouldDrink) {
+          yesVotes += 1;
+        } else {
+          noVotes += 1;
+        }
+      }
     });
     return (
       <div>

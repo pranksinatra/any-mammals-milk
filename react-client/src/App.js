@@ -23,6 +23,7 @@ class App extends React.Component {
 
     // Make debugging easier (@todo -> remove in production)
     window.currentUser = firebase.auth().currentUser;
+    console.log('current user:', window.currentUser);
   }
 
   componentWillUnmount() {
