@@ -49,6 +49,7 @@ class Home extends React.Component {
   render() {
     let yesVotes = 0;
     let noVotes = 0;
+
     this.state.mammals.forEach(({ vote }) => {
       if (vote) {
         if (vote.wouldDrink) {
@@ -58,6 +59,13 @@ class Home extends React.Component {
         }
       }
     });
+
+    const swipeableMammals = this.state.mammals
+      .filter(({ vote }) => typeof vote === 'undefined')
+      .slice(0, 3)
+      .reverse();
+    // console.log('swipeablemammals', swipeableMammals.map(m => m.name));
+
     return (
       <div>
         <Nav />
@@ -65,7 +73,7 @@ class Home extends React.Component {
           <h1 style={{ maxWidth: '100%', width: '500px', margin: '0 auto' }}>
             Would you drink this mammal's&nbsp;milk?
           </h1>
-          <Swipe mammals={this.state.mammals} onVote={this.handleVote} />
+          <Swipe mammals={swipeableMammals} onVote={this.handleVote} />
           <div
             style={{
               padding: '1rem',

@@ -243,10 +243,7 @@ class Swipe extends React.Component {
 
     // console.log('render', this.amount);
 
-    const mammals = this.props.mammals
-      .filter(({ vote }) => typeof vote !== 'number')
-      .slice(0, this.amount)
-      .reverse();
+    const mammals = this.props.mammals;
 
     if (mammals.length && this.state.hasMounted) {
       const Swing = this.Swing;
