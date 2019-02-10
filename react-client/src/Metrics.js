@@ -5,6 +5,7 @@ const Metrics = props => {
   return (
     <div>
       <Nav />
+      <h1>A Modern Milk Marketplace</h1>
     </div>
   );
 };

@@ -10,6 +10,9 @@ const StyledFooter = styled('div')`
     color: #666;
     margin: 2rem auto;
   }
+  a {
+    color: inherit;
+  }
 `;
 
 const Footer = () => {

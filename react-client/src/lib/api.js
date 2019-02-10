@@ -1,7 +1,13 @@
+import { shuffle } from './utils';
+// import {firebaseApp} from './firebase';
+
 class API {
   constructor() {
     // this.baseURL = 'http://api.micahjon.com/any-mammals-milk/api-server';
     this.voteQueue = [];
+
+    // this.firebaseApp = firebaseApp;
+
     // this.voteInterval = 3000;
     // this.voteTimeout = null;
     // this.userId = null;
@@ -17,20 +23,20 @@ class API {
     return fetch('/full.min.json')
       .then(r => r.json())
       .then(mammals =>
-        mammals.map(mammal => {
-          // Get id that can be used on DOM element
-          mammal.htmlId = mammal.id
-            .replace(' ', '-')
-            .toLowerCase()
-            .replace(/[^a-z-]/g, '');
+        shuffle(
+          mammals.map(mammal => {
+            // Get id that can be used on DOM element
+            mammal.htmlId = mammal.id
+              .replace(' ', '-')
+              .toLowerCase()
+              .replace(/[^a-z-]/g, '');
 
-          //
-
-          // Escape single quotes and parenthesis for background images
-          mammal.imageSrc =
-            '/mammals/' + mammal.image.replace(/['()]/g, '\\$&');
-          return mammal;
-        })
+            // Escape single quotes and parenthesis for background images
+            mammal.imageSrc =
+              '/mammals/' + mammal.image.replace(/['()]/g, '\\$&');
+            return mammal;
+          })
+        )
       );
   }
 

@@ -11,7 +11,7 @@ const ContainerBox = styled('div')`
   position: relative;
   width: 520px;
   max-width: 100%;
-  margin: 2rem auto 8rem;
+  margin: 2rem auto 4rem;
   outline: 2px solid red;
   :before {
     content: '';
@@ -289,7 +289,13 @@ class Swipe extends React.Component {
                     }}
                   >
                     <div style={{ paddingBottom }} />
-                    <Caption>{mammal.htmlId}</Caption>
+                    <Caption
+                      style={{
+                        color: mammal === topMammal ? '' : 'transparent',
+                      }}
+                    >
+                      {mammal.name}
+                    </Caption>
                   </Mammal>
                 </CenterContents>
               );
@@ -300,8 +306,6 @@ class Swipe extends React.Component {
         </ContainerBox>
       );
     }
-
-    console.log('--------- render laoding...');
 
     // Loading message
     return (
