@@ -6,6 +6,18 @@ class API {
     // this.baseURL = 'http://api.micahjon.com/any-mammals-milk/api-server';
     this.voteQueue = [];
 
+    this.functionsPath =
+      'https://us-central1-any-mammals-milk.cloudfunctions.net/';
+
+    // Deploying functions locally
+    if (window.location.hostname === 'localhost') {
+      this.functionsPath =
+        'http://localhost:5000/any-mammals-milk/us-central1/';
+      console.log('yep', this.functionsPath);
+    } else {
+      console.log('noep', window.location.hostname);
+    }
+
     // this.firebaseApp = firebaseApp;
 
     // this.voteInterval = 3000;
@@ -38,6 +50,34 @@ class API {
           })
         )
       );
+  }
+
+  postToFirebase(functionName, data) {
+    return fetch(`${this.functionsPath}${functionName}`, {
+      method: 'post',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  }
+
+  saveUserData(userData) {
+    if (!userData.uid) return Promise.reject('User missing uid');
+    const userId = userData.uid;
+    const loginDate = Date.now();
+    const { displayName, email } = userData;
+
+    return this.postToFirebase('addUser', {
+      userId,
+      loginDate,
+      displayName,
+      email,
+    })
+      .then(r => r.json())
+      .then(console.log)
+      .catch(console.error);
   }
 
   // getVotesByMammal() {

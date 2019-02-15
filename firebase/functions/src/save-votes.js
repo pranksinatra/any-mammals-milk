@@ -1,8 +1,7 @@
 const getTimestamp = require('./utils/timestamp');
+const { arrayUnion } = require('firebase-admin').firestore.FieldValue;
 
-module.exports = (db, firestore) => {
-  const { arrayUnion } = firestore.FieldValue;
-
+module.exports = db => {
   return (request, response) => {
     // Get userId and votes array from POST body, and santize data
     let userId, votes;
@@ -12,8 +11,8 @@ module.exports = (db, firestore) => {
       votes = data.votes.map(vote => {
         return {
           mammal: vote.mammalId.replace(/[^a-z-]/g, ''),
-          voteDate: getTimestamp(firestore, vote.voteDate),
-          wouldDrink: !!vote.wouldDrink,
+          voteDate: getTimestamp(vote.voteDate),
+          wouldDrink: Boolean(vote.wouldDrink),
         };
       });
     } catch (err) {
@@ -21,14 +20,20 @@ module.exports = (db, firestore) => {
     }
 
     const userDoc = db.collection('users').doc(userId);
-    votes.forEach(vote => {
-      console.log('adding vote', vote);
-      userDoc.update({
-        mammalVotes: arrayUnion(vote),
+    Promise.all(
+      votes.map(vote =>
+        userDoc.update({
+          mammalVotes: arrayUnion(vote),
+        })
+      )
+    )
+      .then(() => {
+        return sendSuccess(response, `saved ${votes.length} votes`);
+      })
+      .catch(error => {
+        console.error('Unable to save votes', error);
+        return sendSuccess(response, error);
       });
-    });
-
-    sendSuccess(response, 'thanks!');
   };
 };
 

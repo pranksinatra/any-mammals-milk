@@ -1,7 +1,9 @@
-module.exports = getTimestamp;
+const firebase = require('firebase-admin');
 
-function getTimestamp(firestore, jsTimestamp) {
-  const { Timestamp } = firestore;
+function getTimestamp(jsTimestamp) {
+  const { Timestamp } = firebase.firestore;
   jsTimestamp = parseInt(jsTimestamp);
   return jsTimestamp ? Timestamp.fromMillis(jsTimestamp) : Timestamp.now();
 }
+
+module.exports = getTimestamp;

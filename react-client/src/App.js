@@ -6,6 +6,7 @@ import Metrics from './Metrics';
 import Profile from './Profile';
 import { firebase } from './lib/firebase';
 import './global.css';
+import { api } from './lib/api';
 
 class App extends React.Component {
   constructor(props) {
@@ -17,13 +18,13 @@ class App extends React.Component {
 
   componentDidMount() {
     // Bind sign-in state
-    this.unregisterAuthObserver = firebase
-      .auth()
-      .onAuthStateChanged(user => this.setState({ isSignedIn: !!user }));
-
-    // Make debugging easier (@todo -> remove in production)
-    window.currentUser = firebase.auth().currentUser;
-    console.log('current user:', window.currentUser);
+    this.unregisterAuthObserver = firebase.auth().onAuthStateChanged(user => {
+      this.setState({ isSignedIn: !!user });
+      if (user) {
+        // console.log('user', user);
+        api.saveUserData(user);
+      }
+    });
   }
 
   componentWillUnmount() {
