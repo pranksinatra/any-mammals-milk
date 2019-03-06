@@ -4,23 +4,19 @@ const cors = require('cors')({
   origin: true,
 });
 
-// Function definitions
-const addUser = require('./src/add-user');
-const saveVotes = require('./src/save-votes');
-
 admin.initializeApp(functions.config().firebase);
-
 const db = admin.firestore();
 
-// Create and Deploy Your First Cloud Functions
-// https://firebase.google.com/docs/functions/write-firebase-functions
+// Function definitions
+const getMammals = require('./src/get-mammals');
+const createUpdateUser = require('./src/create-update-user');
+const getVotes = require('./src/get-votes');
+const saveVotes = require('./src/save-votes');
 
-// exports.helloWorld = functions.https.onRequest((request, response) => {
-//   response.send('Hello from Firebase!');
-// });
-
-exports.addUser = wrapFunction(addUser);
+exports.getMammals = wrapFunction(getMammals);
+exports.createUpdateUser = wrapFunction(createUpdateUser);
 exports.saveVotes = wrapFunction(saveVotes);
+exports.getVotes = wrapFunction(getVotes);
 
 function wrapFunction(fn) {
   return functions.https.onRequest((req, res) => {

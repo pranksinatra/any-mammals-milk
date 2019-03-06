@@ -1,5 +1,5 @@
-const getTimestamp = require('./utils/timestamp');
 const Validator = require('fastest-validator');
+const getTimestamp = require('./utils/timestamp');
 const { arrayUnion } = require('firebase-admin').firestore.FieldValue;
 
 module.exports = db => {
@@ -23,10 +23,15 @@ module.exports = db => {
 
     // Create or update associated user document
     const userDoc = db.collection('users').doc(userId);
-    return Promise.all([
-      userDoc.set({ displayName, email }),
-      userDoc.update({ loginDates: arrayUnion(loginDate) }),
-    ]).then(sendSuccess, sendError);
+
+    return userDoc
+      .set(
+        { displayName, email, loginDates: arrayUnion(loginDate) },
+        { merge: true }
+      )
+      .then(sendSuccess, sendError);
+
+    // return Promise.all([userDoc.update({})]).then(sendSuccess, sendError);
 
     function sendSuccess() {
       return res.send({ success: 'Saved user data' });

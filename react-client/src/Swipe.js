@@ -12,7 +12,7 @@ const ContainerBox = styled('div')`
   width: 520px;
   max-width: 100%;
   margin: 2rem auto 4rem;
-  outline: 2px solid red;
+  ${'' /* outline: 2px solid red; */}
   :before {
     content: '';
     display: block;
@@ -179,15 +179,8 @@ class Swipe extends React.Component {
       (this.swingComponent.current &&
         this.swingComponent.current.childElements) ||
       [];
+
     const topCard = cards.length ? cards[cards.length - 1].current : undefined;
-
-    // console.trace('got top card', topCard.firstElementChild.id);
-
-    // if (topCard) {
-
-    // } else {
-    //   console.log('no top card!!!', cards[cards.length - 1], cards);
-    // }
 
     return topCard;
   }
@@ -205,8 +198,6 @@ class Swipe extends React.Component {
 
     // Animate card
     if (topCard) {
-      // console.log('animating top card', topCard.id);
-
       this.teardownCard(topCard);
       this.isAnimating = true;
       animateCard(topCard, isYes, () => {
@@ -219,40 +210,18 @@ class Swipe extends React.Component {
   }
 
   onSwipe(isRight) {
-    // console.log('swipe', this.topMammal.id, isRight);
-
     // Remove event listeners from topmost card
     this.teardownCard(this.getTopCardElement());
-
-    // setTimeout(() => {
-    //   const topCard = this.getTopCardElement();
-    //   console.log('100', topCard ? topCard.firstElementChild.id : topCard);
-    // }, 100);
-
     this.props.onVote(this.topMammal, isRight);
   }
 
   render() {
-    // const amount = this.state.amount
-    // console.log(amount);
-    // if (this.amount === 3) {
-    //   this.amount = 4;
-    // } else {
-    //   this.amount = 3;
-    // }
-
-    // console.log('render', this.amount);
-
     const mammals = this.props.mammals;
 
     if (mammals.length && this.state.hasMounted) {
       const Swing = this.Swing;
       const topMammal = mammals[mammals.length - 1];
       this.topMammal = topMammal;
-      // console.log(
-      //   '---------- render mammals',
-      //   mammals.map(({ htmlId }) => htmlId)
-      // );
 
       const disableWhenAnimating = {
         pointerEvents: this.isAnimating ? 'none' : '',
@@ -269,18 +238,15 @@ class Swipe extends React.Component {
             ref={this.swingComponent}
           >
             {mammals.map((mammal, index) => {
-              const maxWidth = getMammalBoxMaxWidth(mammal);
-              const paddingBottom = (100 / mammal.width) * mammal.height + '%';
+              const { id, name, image } = mammal;
+              const maxWidth = getMammalBoxMaxWidth(image);
+              const paddingBottom = (100 / image.width) * image.height + '%';
 
               return (
-                <CenterContents
-                  key={mammal.id}
-                  id={mammal.htmlId}
-                  style={{ zIndex: index + 1 }}
-                >
+                <CenterContents key={id} id={id} style={{ zIndex: index + 1 }}>
                   <Mammal
                     style={{
-                      backgroundImage: `url(${mammal.imageSrc})`,
+                      backgroundImage: `url(/mammals/${image.src})`,
                       maxWidth,
                       filter: mammal === topMammal ? '' : 'blur(5px)',
                     }}
@@ -291,7 +257,7 @@ class Swipe extends React.Component {
                         color: mammal === topMammal ? '' : 'transparent',
                       }}
                     >
-                      {mammal.name}
+                      {name}
                     </Caption>
                   </Mammal>
                 </CenterContents>

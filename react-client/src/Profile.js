@@ -1,7 +1,7 @@
 import React from 'react';
 import Nav from './Nav.js';
-import { FirebaseAuthComponent } from './lib/firebase';
-import { getUserImage, getUserNickname } from './lib/user';
+import { FirebaseAuthComponent, firebase } from './lib/firebase';
+import { getUserNickname } from './lib/user';
 
 class Profile extends React.Component {
   constructor(props) {
@@ -18,6 +18,7 @@ class Profile extends React.Component {
         {props.isSignedIn ? (
           <div>
             <h1>Hey, {getUserNickname()}</h1>
+            <button onClick={() => firebase.auth().signOut()}>Sign out</button>
           </div>
         ) : (
           <div>
