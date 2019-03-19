@@ -1,34 +1,36 @@
 import React from 'react';
-import Nav from './Nav.js';
 import { FirebaseAuthComponent, firebase } from './lib/firebase';
-import { getUserNickname } from './lib/user';
+import { valueOf } from 'microstates';
 
-class Profile extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {};
-  }
+export default function Profile({ user, mammals }) {
+  const displayName = user.displayName.state;
+  const mammalObjects = valueOf(mammals);
 
-  render() {
-    const { props } = this;
-
-    return (
-      <div>
-        <Nav />
-        {props.isSignedIn ? (
-          <div>
-            <h1>Hey, {getUserNickname()}</h1>
-            <button onClick={() => firebase.auth().signOut()}>Sign out</button>
-          </div>
-        ) : (
-          <div>
-            <h1>Sign in to save your progress!</h1>
-            <FirebaseAuthComponent />
-          </div>
-        )}
-      </div>
-    );
-  }
+  return (
+    <main>
+      {!user.isAnonymous ? (
+        <div>
+          <h1>Hey, {displayName}</h1>
+          <button onClick={() => firebase.auth().signOut()}>Sign out</button>
+          <h2>Votes</h2>
+          <ul>
+            {mammalObjects
+              .filter(({ vote }) => vote)
+              .map(({ vote }) => {
+                return (
+                  <li key={vote.mammalId}>
+                    {vote.mammalId} - {vote.wouldDrink ? 'yep' : 'nope'}
+                  </li>
+                );
+              })}
+          </ul>
+        </div>
+      ) : (
+        <div>
+          <h1>Sign in to save your progress!</h1>
+          <FirebaseAuthComponent />
+        </div>
+      )}
+    </main>
+  );
 }
-
-export default Profile;

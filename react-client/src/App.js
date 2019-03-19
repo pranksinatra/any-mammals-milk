@@ -1,164 +1,131 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import './global.css';
 import Route from 'react-router-dom/Route';
 import Switch from 'react-router-dom/Switch';
 import Home from './Home';
 import Metrics from './Metrics';
 import Profile from './Profile';
 import { firebase } from './lib/firebase';
-import './global.css';
 import { api } from './lib/api';
+import { valueOf } from 'microstates';
+import { Model } from './lib/model';
+import useType from '@microstates/react';
+import Nav from './Nav';
+import Footer from './Footer';
+import { getLocalUser } from './lib/local';
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      isSignedIn: false,
-      userId: null,
-      mammals: [],
-    };
-    this.getMammals = this.getMammals.bind(this);
-    this.handleVote = this.handleVote.bind(this);
-    this.updateMammalsWithUserVotes = this.updateMammalsWithUserVotes.bind(
-      this
-    );
+const initialUser = getLocalUser();
+
+export default function App() {
+  const { user, mammals } = useType(Model, {
+    user: initialUser,
+    mammals: [],
+  });
+
+  if (typeof window !== 'undefined') {
+    window.mammals = mammals;
+    window.user = user;
+    window.valueOf = valueOf;
+    window.api = api;
   }
 
-  componentDidMount() {
-    const getMammalsInitially = this.getMammals();
-    // Bind sign-in state
+  // Listen for user login & logout
+  useEffect(() => {
     let isInitialState = true;
-    this.unregisterAuthObserver = firebase.auth().onAuthStateChanged(user => {
-      this.setState({
-        isSignedIn: !!user,
-        userId: (user && user.uid) || null,
+    const unregisterAuthObserver = firebase
+      .auth()
+      .onAuthStateChanged(firebaseUser => {
+        // User logged in. Get any prior votes for logged-in user
+        if (firebaseUser) {
+          const userId = firebaseUser.uid;
+          api
+            .getUserVotes(userId)
+            .then(fetchedVotes => {
+              // Merge anonymous votes w/ user's votes from fetched from firebase
+              const uniqueVotes = [];
+              [...api.votes, ...fetchedVotes].forEach(vote =>
+                addOrReplace(vote, uniqueVotes)
+              );
+
+              user.update(firebaseUser, uniqueVotes);
+            })
+            .catch(error => {
+              console.error('Unable to get user votes', error);
+
+              // Prevent further issues
+              firebase.auth().signOut();
+            });
+        }
+        // User logged out or app booted up w/ anonymous user. Reset votes.
+        else if (!isInitialState) {
+          user.update(undefined, []);
+        }
+        // App booted up with anonymous user. No need to do anything.
+        else {
+        }
+        // }
+        isInitialState = false;
       });
-      // App started up
-      if (isInitialState) {
-        // User still logged in from prior session
-        if (user) {
-          getMammalsInitially.then(this.updateMammalsWithUserVotes);
-        }
-        // Anonymous user
-        else {
-        }
-      } else {
-        // User logged in
-        if (user) {
-          // Save user data
-          api.saveUserData(user).then(() => {
-            // Save any votes that this user has made anonymously
-            api.sendVotes(user.uid).then(() => {
-              // Update mammals on screen to reflect any prior votes
-              getMammalsInitially.then(this.updateMammalsWithUserVotes);
-            });
-          });
-        }
-        // User logged out
-        else {
-          // Reset all votes on mammals
-          getMammalsInitially.then(() => {
-            this.setState({
-              mammals: this.state.mammals.map(mammal => {
-                delete mammal.vote;
-                return mammal;
-              }),
-            });
-          });
-        }
-      }
-      isInitialState = false;
+    return unregisterAuthObserver;
+  }, []);
 
-      // Make debugging easier
-      window.currentUser = user;
-    });
-  }
-
-  componentWillUnmount() {
-    this.unregisterAuthObserver();
-  }
-
-  getMammals() {
-    return api
+  // Get all mammals (once)
+  useEffect(() => {
+    let isMounted = true;
+    api
       .getMammals()
-      .then(mammals => {
-        this.setState({ mammals });
-        // Make debugging easier
-        window.mammals = mammals;
+      .then(mammalObjects => {
+        if (isMounted) mammals.set(mammalObjects);
       })
       .catch(error => {
         console.log('Unable to fetch mammals!', error);
       });
-  }
-
-  handleVote(mammal, wouldDrink) {
-    console.log('Voted for mammal', mammal.id, wouldDrink);
-    const vote = {
-      wouldDrink,
-      voteDate: Date.now(),
-      mammalId: mammal.id,
+    return () => {
+      isMounted = false;
     };
-    this.setState({
-      mammals: this.state.mammals.map(thisMammal => {
-        if (thisMammal === mammal) {
-          thisMammal.vote = vote;
-        }
-        return thisMammal;
-      }),
-    });
-    api.recordVote(this.state.userId, vote);
-  }
+  }, []);
 
-  updateMammalsWithUserVotes() {
-    // Fetch the user's votes and update swipeable mammals
-    api.getUserVotes(this.state.userId).then(votes => {
-      const voteMap = votes.reduce((obj, vote) => {
-        obj[vote.mammalId] = vote;
-        return obj;
-      }, {});
-      this.setState({
-        mammals: this.state.mammals.map(mammal => {
-          if (voteMap.hasOwnProperty(mammal.id)) {
-            mammal.vote = voteMap[mammal.id];
-          }
-          return mammal;
-        }),
-      });
-    });
-  }
-
-  render() {
-    return (
+  return (
+    <React.Fragment>
+      <Nav />
       <Switch>
         <Route
           exact
           path="/"
-          render={props => (
-            <Home
-              {...props}
-              isSignedIn={this.state.isSignedIn}
-              userId={this.state.userId}
-              mammals={this.state.mammals}
-              handleVote={this.handleVote}
-            />
-          )}
+          render={props => <Home {...props} user={user} mammals={mammals} />}
         />
         <Route
           exact
           path="/metrics/"
-          render={props => (
-            <Metrics {...props} isSignedIn={this.state.isSignedIn} />
-          )}
+          render={props => <Metrics {...props} user={user} />}
         />
         <Route
           exact
           path="/profile/"
-          render={props => (
-            <Profile {...props} isSignedIn={this.state.isSignedIn} />
-          )}
+          render={props => <Profile {...props} user={user} mammals={mammals} />}
         />
       </Switch>
-    );
-  }
+      <Footer />
+    </React.Fragment>
+  );
 }
 
-export default App;
+/**
+ * Add new vote if there's no mammalId conflict
+ * Otherwise, keep the newer of the two conflicting votes
+ * @param {object} vote
+ * @param {array} votes
+ */
+function addOrReplace(vote, votes) {
+  const conflictingVote = votes.find(
+    ({ mammalId }) => mammalId === vote.mammalId
+  );
+  // Add new vote
+  if (!conflictingVote) {
+    votes.push(vote);
+  }
+  // Replace old vote with new vote
+  else if (vote.voteDate > conflictingVote.voteDate) {
+    votes.splice(votes.indexOf(conflictingVote), 1, vote);
+  }
+}

@@ -36,34 +36,37 @@ class API {
     });
   }
 
-  getMammals() {
-    // return fetch('/full.json')
-    return this.postToFirebase('getMammals')
+  getMammals(fromAPI = false) {
+    // Save 300 read queries by using local JSON file instead of asking
+    // Firebase. Remember to update this file when adding new mammals
+    const query = fromAPI
+      ? this.postToFirebase('getMammals')
+      : fetch('/mammals-v1.json');
+
+    return query
       .then(r => r.json())
-      .then(({ mammals, errors }) => {
-        if (errors.length) {
-          console.error('Invalid mammals on server:', errors);
+      .then(({ mammals, error }) => {
+        if (error) {
+          console.error('Unable to get mammals:', error);
+          return [];
         }
         return shuffle(mammals);
       });
   }
 
-  saveUserData(userData) {
-    if (!userData.uid) return Promise.reject('User missing uid');
-    const userId = userData.uid;
-    const loginDate = Date.now();
-    const { displayName, email } = userData;
+  // createUpdateUser(firebaseUser) {
+  //   const { uid, displayName, email, loginDate = Date.now() } = firebaseUser;
+  //   if (!uid) {
+  //     return Promise.reject('Firebase user missing uid');
+  //   }
 
-    return this.postToFirebase('createUpdateUser', {
-      userId,
-      loginDate,
-      displayName,
-      email,
-    })
-      .then(r => r.json())
-      .then(console.log)
-      .catch(console.error);
-  }
+  //   return this.postToFirebase('createUpdateUser', {
+  //     id: uid,
+  //     displayName,
+  //     email,
+  //     loginDate,
+  //   }).then(r => r.json());
+  // }
 
   getUserVotes(userId) {
     return this.postToFirebase('getVotes', {
@@ -129,48 +132,15 @@ class API {
       });
   }
 
-  // getVotesByMammal() {
-  // 	const url = `${this.baseURL}/get-mammal-votes.php`;
+  getVoteCounts(fromAPI = false) {
+    // Save a bunch of read queries by using local JSON file instead of asking
+    // Firebase. Remember to update this file frequently (via a cron)
+    const query = fromAPI
+      ? this.postToFirebase('countVotes')
+      : fetch('/vote-counts-v1.json');
 
-  // 	return fetch(url)
-  // 		.then(r => r.json())
-  // 		.then(({ votes }) => {
-  // 			if (!votes) throw 'Unable to get votes by mammal';
-  // 			return votes;
-  // 		});
-  // }
-
-  // getUserVotes(userId) {
-  // 	const url = `${this.baseURL}/get-user-votes.php/?data=${JSON.stringify({ userId })}`;
-
-  // 	return fetch(url)
-  // 		.then(r => r.json())
-  // 		.then(({ votes, error }) => {
-  // 			if (!votes) throw error;
-  // 			return votes;
-  // 		});
-
-  // }
-
-  // sendVotes(userId, votes) {
-  // 	const url = `${this.baseURL}/vote.php/?data=${JSON.stringify({ userId, votes })}`;
-
-  // 	return fetch(url)
-  // 		.then(r => r.json())
-  // 		.then(({ success, error }) => {
-  // 			if (!success) throw error;
-  // 		});
-  // }
-
-  // saveUserData(user) {
-  // 	const url = `${this.baseURL}/add-user.php/?data=${encodeURIComponent(JSON.stringify(user))}`;
-
-  // 	return fetch(url)
-  // 		.then(r => r.json())
-  // 		.then(({ success, error }) => {
-  // 			if (!success) throw error;
-  // 		});
-  // }
+    return query.then(r => r.json()).catch(console.error);
+  }
 }
 
 export const api = new API();

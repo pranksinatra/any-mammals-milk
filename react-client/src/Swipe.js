@@ -41,7 +41,7 @@ const Mammal = styled('figure')`
   /* max-width set programmatically */
   position: relative;
   flex-grow: 1;
-  background-size: contain;
+  background-size: 101% auto;
   background-repeat: no-repeat;
   background-color: #e7e7e7;
 `;
@@ -180,7 +180,7 @@ class Swipe extends React.Component {
         this.swingComponent.current.childElements) ||
       [];
 
-    const topCard = cards.length ? cards[cards.length - 1].current : undefined;
+    const topCard = cards.length ? cards[0].current : undefined;
 
     return topCard;
   }
@@ -220,7 +220,7 @@ class Swipe extends React.Component {
 
     if (mammals.length && this.state.hasMounted) {
       const Swing = this.Swing;
-      const topMammal = mammals[mammals.length - 1];
+      const topMammal = mammals[0];
       this.topMammal = topMammal;
 
       const disableWhenAnimating = {
@@ -237,13 +237,17 @@ class Swipe extends React.Component {
             throwoutleft={() => this.onSwipe(false)}
             ref={this.swingComponent}
           >
-            {mammals.map((mammal, index) => {
+            {mammals.map((mammal, index, total) => {
               const { id, name, image } = mammal;
               const maxWidth = getMammalBoxMaxWidth(image);
               const paddingBottom = (100 / image.width) * image.height + '%';
 
               return (
-                <CenterContents key={id} id={id} style={{ zIndex: index + 1 }}>
+                <CenterContents
+                  key={id}
+                  id={id}
+                  style={{ zIndex: mammals.length - index }}
+                >
                   <Mammal
                     style={{
                       backgroundImage: `url(/mammals/${image.src})`,

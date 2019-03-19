@@ -2,9 +2,12 @@ const Validator = require('fastest-validator');
 const getTimestamp = require('./utils/timestamp');
 const { arrayUnion } = require('firebase-admin').firestore.FieldValue;
 
+/**
+ * Create/update user and send back user data, including votes
+ */
 module.exports = db => {
   const validate = new Validator().compile({
-    userId: { type: 'string', alphanum: true },
+    id: { type: 'string', alphanum: true },
     loginDate: { type: 'number', integer: true, min: 1550213506537 },
     displayName: { type: 'string', min: 2 },
     email: { type: 'email' },
@@ -18,23 +21,36 @@ module.exports = db => {
     if (validationResult !== true) {
       return sendError(validationResult);
     }
-    const { userId, displayName, email } = postData;
-    const loginDate = getTimestamp(postData.loginDate);
+    const { id, displayName, email, loginDate } = postData;
+    const loginTimestamp = getTimestamp(loginDate);
 
     // Create or update associated user document
-    const userDoc = db.collection('users').doc(userId);
+    const userDocRef = db.collection('users').doc(id);
 
-    return userDoc
+    return userDocRef
       .set(
-        { displayName, email, loginDates: arrayUnion(loginDate) },
+        { displayName, email, loginDates: arrayUnion(loginTimestamp) },
         { merge: true }
       )
-      .then(sendSuccess, sendError);
+      .then(() => userDocRef.get())
+      .then(userDoc => {
+        const { mammalVotes: votes = [] } = userDoc.data();
 
-    // return Promise.all([userDoc.update({})]).then(sendSuccess, sendError);
+        // Convert timestamp to milliseconds for JavaScript
+        votes.map(vote => {
+          const timestamp = vote.voteDate;
+          vote.voteDate =
+            timestamp._seconds * 1e3 + timestamp._nanoseconds / 1e6;
+          return vote;
+        });
 
-    function sendSuccess() {
-      return res.send({ success: 'Saved user data' });
+        // Send back original data plus votes
+        return sendSuccess({ id, displayName, email, loginDate, votes });
+      })
+      .catch(sendError);
+
+    function sendSuccess(user) {
+      return res.send({ user });
     }
 
     function sendError(message) {

@@ -53,10 +53,7 @@ const Footer = () => {
             CC&nbsp;3.0&nbsp;BY
           </a>
         </p>
-        <p>
-          Copyright © {new Date().getFullYear()} Jacob Maldonado Nofziger &amp;
-          Micah Miller-Eshleman
-        </p>
+        <p>Copyright © {new Date().getFullYear()} Micah &amp; Jacob</p>
       </div>
     </StyledFooter>
   );

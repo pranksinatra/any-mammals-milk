@@ -18,8 +18,10 @@ module.exports = db => {
       .doc(userId)
       .get()
       .then(doc => {
-        // console.log('got mammal votes', doc.data().mammalVotes);
-        return doc.data().mammalVotes.map(vote => {
+        // Note: doc.data() might be undefined if this is a new user and the
+        // createUserOnLogin() function has not completed user creation
+        const { mammalVotes = [] } = doc.data();
+        return mammalVotes.map(vote => {
           // Convert timestamp to milliseconds for JavaScript
           const timestamp = vote.voteDate;
           vote.voteDate =
