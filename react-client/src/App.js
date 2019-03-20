@@ -96,7 +96,7 @@ export default function App() {
         />
         <Route
           exact
-          path="/metrics/"
+          path="/votes/"
           render={props => <Metrics {...props} user={user} />}
         />
         <Route

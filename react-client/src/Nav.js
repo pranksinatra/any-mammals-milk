@@ -60,6 +60,7 @@ const Circle = styled('div')`
   background-color: rgb(0, 123, 255);
   color: white;
   background-size: contain;
+  margin-left: 2px;
 `;
 
 const ActiveLine = styled('span')`
@@ -85,10 +86,10 @@ const Nav = props => {
         Swipe
         {'/' === props.location.pathname && <ActiveLine />}
       </StyledLink>
-      <StyledLink to="/metrics/">
+      <StyledLink to="/votes/">
         <Icon src={barGraph} alt="" style={{ margin: '0 6px 0 0' }} />
-        Metrics
-        {'/metrics/' === props.location.pathname && <ActiveLine />}
+        Votes
+        {'/votes/' === props.location.pathname && <ActiveLine />}
       </StyledLink>
       <StyledLink to="/profile/" title="Your Profile">
         <Circle

@@ -1,5 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { api } from './lib/api';
+import styled from '@emotion/styled';
+
+const Block = styled('div')`
+  margin: 0 auto 1rem;
+  padding: 1rem;
+  width: 40rem;
+  max-width: 100%;
+`;
+
+const Plot = styled('div')`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  height: 10rem;
+  width: 100%;
+`;
 
 export default function Metrics({ user }) {
   const [scores, updateScores] = useState([]);
@@ -16,11 +33,17 @@ export default function Metrics({ user }) {
 
   return (
     <main>
-      <h1>A Modern Milk Marketplace</h1>
-      <h2>The Leaderboard</h2>
-      <p>One might say, la crème de la crème.</p>
-      <h2>The Looserboard</h2>
-      <p>Not gonna milk these gals any time soon..</p>
+      <h1>Votes</h1>
+      <Block>
+        <h2>The Leaderboard</h2>
+        <p>One might say, la crème de la crème.</p>
+        <Plot>Plot coming soon!</Plot>
+      </Block>
+      <Block>
+        <h2>The Looserboard</h2>
+        <p>Not gonna milk these gals any time soon..</p>
+        <Plot>Plot coming soon!</Plot>
+      </Block>
     </main>
   );
 }
