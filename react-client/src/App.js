@@ -102,7 +102,7 @@ export default function App() {
         <Route
           exact
           path="/profile/"
-          render={props => <Profile {...props} user={user} mammals={mammals} />}
+          render={props => <Profile {...props} user={user} />}
         />
       </Switch>
       <Footer />

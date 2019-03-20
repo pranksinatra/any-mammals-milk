@@ -1,6 +1,5 @@
 import React from 'react';
-import { FirebaseAuthComponent, firebase } from './lib/firebase';
-import { valueOf } from 'microstates';
+import { firebase } from './lib/firebase';
 import styled from '@emotion/styled';
 import Preferences from './Preferences';
 
@@ -16,7 +15,7 @@ const Button = styled('button')`
   margin: 0 auto;
 `;
 
-export default function Profile({ user, mammals }) {
+export default function Profile({ user }) {
   const firstName = user.displayName.state.split(' ')[0];
 
   const heading = user.isAnonymous ? `Hey there!` : `Hey ${firstName}!`;

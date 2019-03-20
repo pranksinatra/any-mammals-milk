@@ -1,7 +1,6 @@
 import React from 'react';
-import { FirebaseAuthComponent, firebase } from './lib/firebase';
+import { FirebaseAuthComponent } from './lib/firebase';
 import { valueOf } from 'microstates';
-import { Link } from 'react-router-dom';
 import styled from '@emotion/styled';
 
 const Wrapper = styled('div')`
