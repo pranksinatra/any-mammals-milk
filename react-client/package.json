@@ -1,5 +1,5 @@
 {
-  "name": "my-razzle-app",
+  "name": "any-mammals-milk-react-client",
   "version": "0.1.0",
   "license": "MIT",
   "scripts": {
@@ -17,12 +17,15 @@
     "express": "^4.16.4",
     "firebase": "^5.8.2",
     "lockr": "^0.8.5",
-    "microstates": "^0.13.0",
+    "microstates": "^0.14.0",
     "razzle": "^2.4.1",
     "react": "next",
     "react-dom": "next",
     "react-firebaseui": "^3.1.2",
     "react-router-dom": "^4.3.1",
-    "react-swing": "file:../../react-swing"
+    "react-swing": "https://github.com/pranksinatra/react-swing#master"
+  },
+  "resolutions": {
+    "terser": "3.14.1"
   }
 }
