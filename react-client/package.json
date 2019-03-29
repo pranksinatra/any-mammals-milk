@@ -24,6 +24,7 @@
     "react-chartist": "^0.13.3",
     "react-dom": "next",
     "react-firebaseui": "^3.1.2",
+    "react-ga": "^2.5.7",
     "react-router-dom": "^4.3.1",
     "react-swing": "https://github.com/pranksinatra/react-swing#master"
   },
