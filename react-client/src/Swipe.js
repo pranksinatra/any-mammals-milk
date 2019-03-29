@@ -108,7 +108,7 @@ const getMammalBoxMaxWidth = ({ width, height }) => {
  */
 const getSwingConfig = Swing => ({
   allowedDirections: [Swing.DIRECTION.LEFT, Swing.DIRECTION.RIGHT],
-  throwOutDistance: () => Math.max(window.windowWidth) / 4 + 200,
+  throwOutDistance: () => window.innerWidth / 4 + 200,
 
   // Make it easier to swipe left or right on a card
   throwOutConfidence: (xOffset, yOffset, element) => {
@@ -120,7 +120,7 @@ const getSwingConfig = Swing => ({
     const squareWidth = Math.max(cardHeight, cardWidth);
 
     const xConfidence = Math.min(
-      Math.abs(xOffset) / ((cardWidth + squareWidth) / 3.6),
+      Math.abs(xOffset) / ((cardWidth + cardWidth + squareWidth) / 8),
       1
     );
     const yConfidence = Math.min(Math.abs(yOffset) / cardHeight, 1);
