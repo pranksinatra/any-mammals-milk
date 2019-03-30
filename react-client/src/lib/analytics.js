@@ -1,5 +1,5 @@
 import ReactGA from 'react-ga';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const dev = process.env.NODE_ENV !== 'production';
 if (!dev) {
@@ -7,33 +7,29 @@ if (!dev) {
 }
 
 // Track page views in Google Analytics
-// @source https://github.com/react-ga/react-ga/issues/122#issuecomment-396087073
+// @source https://github.com/react-ga/react-ga/wiki/React-Router-v4-withTracker
 
 ReactGA.initialize('UA-114826322-1');
 
-export default Component =>
-  class WithAnalytics extends React.Component {
-    componentDidMount() {
-      const page = this.props.location.pathname;
-      this.trackPage(page);
-    }
-
-    componentWillReceiveProps(nextProps) {
-      const currentPage = this.props.location.pathname;
-      const nextPage = nextProps.location.pathname;
-      if (currentPage !== nextPage) this.trackPage(nextPage);
-    }
-
-    trackPage = page => {
-      if (!dev) {
-        ReactGA.set({ page });
-        ReactGA.pageview(page);
-      } else {
-        console.log('Not tracking page on dev:', page);
-      }
-    };
-
-    render() {
-      return <Component {...this.props} />;
+const withAnalytics = WrappedComponent => {
+  // Track page in Google Analytics
+  const trackPage = page => {
+    if (!dev) {
+      ReactGA.set({ page });
+      ReactGA.pageview(page);
+    } else {
+      console.log('Not tracking page on dev:', page);
     }
   };
+
+  // Track again whenever page path changes
+  return props => {
+    useEffect(() => trackPage(props.location.pathname), [
+      props.location.pathname,
+    ]);
+
+    return <WrappedComponent {...props} />;
+  };
+};
+
+export default withAnalytics;
