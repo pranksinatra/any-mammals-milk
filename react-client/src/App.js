@@ -16,11 +16,15 @@ import { getLocalUser } from './lib/local';
 
 const initialUser = getLocalUser();
 
+// Ensure useEffect hook always references the current user object
+let userMicrostateReference;
+
 export default function App() {
   const { user, mammals } = useType(Model, {
     user: initialUser,
     mammals: [],
   });
+  userMicrostateReference = user;
 
   if (typeof window !== 'undefined') {
     window.mammals = mammals;
@@ -30,11 +34,15 @@ export default function App() {
   }
 
   // Listen for user login & logout
+  // Only runs once, so we use currentUserReference to keep it in sync
+  // with the current user Microstate
   useEffect(() => {
     let isInitialState = true;
     const unregisterAuthObserver = firebase
       .auth()
       .onAuthStateChanged(firebaseUser => {
+        let user = userMicrostateReference;
+
         // User logged in. Get any prior votes for logged-in user
         if (firebaseUser) {
           const userId = firebaseUser.uid;
@@ -56,14 +64,17 @@ export default function App() {
               firebase.auth().signOut();
             });
         }
-        // User logged out or app booted up w/ anonymous user. Reset votes.
+        // User logged out. Send votes for logged-out user and then reset vote queue
         else if (!isInitialState) {
+          api.sendVotes(valueOf(user.id));
           user.update(undefined, []);
         }
-        // App booted up with anonymous user. No need to do anything.
+        // App booted up with anonymous user. Queue up any votes from prior session
         else {
+          valueOf(user.votes).forEach(vote => {
+            api.recordVote('', vote);
+          });
         }
-        // }
         isInitialState = false;
       });
     return unregisterAuthObserver;
