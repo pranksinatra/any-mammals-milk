@@ -1,5 +1,5 @@
 import { valueOf } from 'microstates';
-import { setLocalUser } from './local';
+import { setLocalUser, getAnonymousUserId } from './local';
 
 export class Model {
   user = User;
@@ -28,7 +28,7 @@ export class User {
     user = user || {};
     const { displayName = '', email = '', photoURL = '' } = user;
     const newUserData = {
-      id: user.uid || user.id || '',
+      id: user.uid || user.id || getAnonymousUserId(),
       displayName,
       email,
       photoURL,
@@ -38,7 +38,8 @@ export class User {
     return this.set(newUserData);
   }
   get isAnonymous() {
-    return !this.id.state;
+    const id = valueOf(this.id);
+    return !id || id.startsWith('anonymous_');
   }
 }
 

@@ -19,14 +19,15 @@ class API {
 
     // Send any remaining votes before user exits the page
     if (typeof window !== 'undefined') {
-      window.onbeforeunload = () => {
-        this.sendVotes(this.userId);
-      };
+      window.addEventListener('unload', () => {
+        this.sendVotes(this.userId, true);
+      });
     }
   }
 
   postToFirebase(functionName, data) {
-    return fetch(`${this.functionsPath}${functionName}`, {
+    const url = `${this.functionsPath}${functionName}`;
+    return fetch(url, {
       method: 'post',
       headers: {
         Accept: 'application/json',
@@ -34,6 +35,11 @@ class API {
       },
       body: JSON.stringify(data),
     });
+  }
+
+  sendBeacon(functionName, data) {
+    const url = `${this.functionsPath}${functionName}`;
+    return navigator.sendBeacon(url, JSON.stringify(data));
   }
 
   getMammals(fromAPI = false) {
@@ -68,9 +74,10 @@ class API {
   //   }).then(r => r.json());
   // }
 
-  getUserVotes(userId) {
+  getUserVotes(userId, anonymousUserIdToDelete) {
     return this.postToFirebase('getVotes', {
       userId,
+      anonymousUserIdToDelete,
     })
       .then(r => r.json())
       .catch(console.error)
@@ -80,15 +87,16 @@ class API {
   recordVote(userId, vote) {
     // New user
     if (userId !== this.userId) {
-      // Send any unsent votes for prior user
-      this.sendVotes(this.userId);
-
-      // Update current user ID
+      // Throw away any unsent votes for prior user
+      if (this.votes.length) {
+        console.error(
+          `${this.votes.length} votes for user ${
+            this.userId
+          } were not sent b/c user changed`
+        );
+      }
+      this.votes = [];
       this.userId = userId;
-
-      // No need to reset vote queue. If the prior user was anonymous (this.userId = null),
-      // then we want to send these votes now that the user has logged in.
-      // If the prior user was not anonymous, the vote queue is cleared above by this.sendVotes()
     }
 
     // console.log('recording vote', { userId, vote });
@@ -103,20 +111,26 @@ class API {
   /**
    * Send votes to Firebase
    * @param {string/null} userId
-   * @return {Promise}
+   * @return {Promise/boolean}
    */
-  sendVotes(userId) {
+  sendVotes(userId, useBeacon = false) {
     if (!userId || !this.votes.length) return Promise.resolve();
 
     // Get all votes and reset queue
     const votes = this.votes.splice(0);
 
-    // console.log('sending votes', { userId, votes });
-
-    return this.postToFirebase('saveVotes', {
+    const data = {
       userId,
       votes,
-    })
+    };
+
+    // console.log('sending votes', { userId, votes });
+
+    if (useBeacon) {
+      return this.sendBeacon('saveVotes', data);
+    }
+
+    return this.postToFirebase('saveVotes', data)
       .then(r => r.json())
       .then(console.log)
       .catch(error => {

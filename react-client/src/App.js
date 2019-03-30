@@ -43,18 +43,34 @@ export default function App() {
       .onAuthStateChanged(firebaseUser => {
         let user = userMicrostateReference;
 
-        // User logged in. Get any prior votes for logged-in user
+        // User logged in.
         if (firebaseUser) {
           const userId = firebaseUser.uid;
           api
-            .getUserVotes(userId)
+            // Get any prior saved votes for just-logged-in user, and delete anonymous user
+            .getUserVotes(
+              userId,
+              user.isAnonymous ? valueOf(user.id) : undefined
+            )
             .then(fetchedVotes => {
-              // Merge anonymous votes w/ user's votes from fetched from firebase
+              const anonymousVotes = user.isAnonymous
+                ? valueOf(user.votes)
+                : [];
+
+              // Merge anonymous votes w/ user's votes from fetched from firebase, keeping the newer of the two
               const uniqueVotes = [];
-              [...api.votes, ...fetchedVotes].forEach(vote =>
+              [...anonymousVotes, ...fetchedVotes].forEach(vote =>
                 addOrReplace(vote, uniqueVotes)
               );
 
+              // Send any anonymous votes that are more recent than the votes in firebase
+              anonymousVotes
+                .filter(vote => uniqueVotes.includes(vote))
+                .forEach(vote => {
+                  api.recordVote(userId, vote);
+                });
+
+              // Update user
               user.update(firebaseUser, uniqueVotes);
             })
             .catch(error => {
@@ -64,16 +80,15 @@ export default function App() {
               firebase.auth().signOut();
             });
         }
-        // User logged out. Send votes for logged-out user and then reset vote queue
+        // User logged out.
         else if (!isInitialState) {
+          // Send any unsent votes for just-logged-out user.
           api.sendVotes(valueOf(user.id));
+          // Update model to anonymous user
           user.update(undefined, []);
         }
-        // App booted up with anonymous user. Queue up any votes from prior session
+        // App booted up with anonymous user.
         else {
-          valueOf(user.votes).forEach(vote => {
-            api.recordVote('', vote);
-          });
         }
         isInitialState = false;
       });

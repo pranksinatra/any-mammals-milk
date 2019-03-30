@@ -4,7 +4,7 @@ const { arrayUnion } = require('firebase-admin').firestore.FieldValue;
 
 module.exports = db => {
   const validate = new Validator().compile({
-    userId: { type: 'string', alphanum: true },
+    userId: { type: 'string', pattern: /[a-zA-Z0-9_]+/ },
     votes: {
       type: 'array',
       min: 1,
@@ -22,7 +22,15 @@ module.exports = db => {
 
   return (req, res) => {
     // Get user data from POST body, and validate it
-    const postData = req.body;
+    let postData = req.body;
+
+    // If Beacon API was used, post data will be a string that needs parsed as JSON
+    if (typeof postData === 'string') {
+      try {
+        postData = JSON.parse(postData);
+      } catch (error) {}
+    }
+
     const validationResult = validate(postData);
     if (validationResult !== true) {
       return sendError(validationResult);
@@ -33,13 +41,13 @@ module.exports = db => {
     });
 
     const userDoc = db.collection('users').doc(userId);
-    return Promise.all(
-      votes.map(vote =>
-        userDoc.update({
-          mammalVotes: arrayUnion(vote),
-        })
-      )
-    ).then(sendSuccess, sendError);
+
+    return Promise.all([
+      userDoc.set({ lastUpdated: getTimestamp() }, { merge: true }),
+      ...votes.map(vote =>
+        userDoc.set({ mammalVotes: arrayUnion(vote) }, { merge: true })
+      ),
+    ]).then(sendSuccess, sendError);
 
     function sendSuccess() {
       return res.send({
