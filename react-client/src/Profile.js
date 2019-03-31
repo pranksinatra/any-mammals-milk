@@ -36,7 +36,7 @@ export default function Profile({ user }) {
           <a
             href="https://docs.google.com/forms/d/e/1FAIpQLSeFkQEd9EW5CJJPDxsa8Liqi9MJXo7836Io32xYq1un1l7ndA/viewform?usp=sf_link"
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
           >
             becoming an intern
           </a>

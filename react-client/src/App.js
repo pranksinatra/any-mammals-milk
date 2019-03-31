@@ -87,8 +87,10 @@ export default function App() {
           // Update model to anonymous user
           user.update(undefined, []);
         }
-        // App booted up with anonymous user.
-        else {
+        // Firebase user is logged out, but model still reflects signed-in user
+        // from an previous (now expired) session
+        else if (!user.isAnonymous) {
+          user.update(undefined, []);
         }
         isInitialState = false;
       });
