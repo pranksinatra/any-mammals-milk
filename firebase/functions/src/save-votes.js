@@ -28,7 +28,9 @@ module.exports = db => {
     if (typeof postData === 'string') {
       try {
         postData = JSON.parse(postData);
-      } catch (error) {}
+      } catch (error) {
+        console.error('Unable to parse save-votes POST body as JSON string');
+      }
     }
 
     const validationResult = validate(postData);

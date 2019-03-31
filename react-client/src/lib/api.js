@@ -4,8 +4,7 @@ import { debounce } from 'debounce';
 
 class API {
   constructor() {
-    const isDev =
-      typeof window !== 'undefined' && window.location.hostname === 'localhost';
+    const isDev = process.env.NODE_ENV !== 'production';
     this.functionsPath = isDev
       ? 'http://localhost:5000/any-mammals-milk/us-central1/'
       : 'https://us-central1-any-mammals-milk.cloudfunctions.net/';
