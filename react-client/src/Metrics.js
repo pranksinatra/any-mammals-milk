@@ -51,7 +51,7 @@ export default function Metrics({ user, mammals }) {
   );
   const leastPopular = getMammalsWithScores(
     mammalObjects,
-    scores.slice(scores.length - limit)
+    scores.slice(scores.length - limit).reverse()
   );
 
   const mostPopularChartData = {
@@ -108,7 +108,7 @@ export default function Metrics({ user, mammals }) {
         </GreenPlot>
         <MammalImages>
           {mostPopular.map(({ name, image }) => {
-            const src = `/mammals/${image.src}`;
+            const src = `/mammals/${image.src.replace(/\\/g, '')}`;
             const margin = '.5rem';
             return (
               <img
@@ -137,7 +137,7 @@ export default function Metrics({ user, mammals }) {
         </Plot>
         <MammalImages>
           {leastPopular.map(({ name, image }) => {
-            const src = `/mammals/${image.src}`;
+            const src = `/mammals/${image.src.replace(/\\/g, '')}`;
             const margin = '.5rem';
             return (
               <img
