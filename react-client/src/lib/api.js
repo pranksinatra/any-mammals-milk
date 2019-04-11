@@ -150,7 +150,7 @@ class API {
     // Firebase. Remember to update this file frequently (via a cron)
     const query = fromAPI
       ? this.postToFirebase('countVotes')
-      : fetch('/vote-counts-v3.json');
+      : fetch('/vote-counts-v4.json');
 
     return query.then(r => r.json()).catch(console.error);
   }
